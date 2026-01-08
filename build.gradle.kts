@@ -1,5 +1,4 @@
-import org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE
-import org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -7,25 +6,18 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
-    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1" apply false
 }
 
-ktlint {
-    android.set(false)
+subprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
-    filter {
-        exclude { element ->
-            element.file.toString().contains("generated")
+    configure<KtlintExtension> {
+        android.set(true)
+
+        filter {
+            exclude("**/build/**")
+            exclude("**/generated/**")
         }
-        exclude("**/build/**")
-        exclude("**/target/**")
     }
-
-    reporters {
-        reporter(PLAIN)
-        reporter(CHECKSTYLE)
-    }
-
-    verbose.set(true)
-    outputToConsole.set(true)
 }

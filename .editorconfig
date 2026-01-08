@@ -39,7 +39,6 @@ indent_style = space
 indent_size = 4
 indent_style = space
 
-# Git ignore
 [.gitignore]
 indent_size = 4
 indent_style = space
