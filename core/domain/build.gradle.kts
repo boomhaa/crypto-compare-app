@@ -20,7 +20,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -35,7 +35,6 @@ kotlin {
         jvmTarget.set(JvmTarget.JVM_17)
     }
 }
-
 
 dependencies {
     api(project(":core:model"))
