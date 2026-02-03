@@ -1,8 +1,11 @@
 package com.example.data.di
 
+import com.example.data.repository.AuthRepositoryImpl
 import com.example.data.repository.CryptoCompareRepositoryImpl
+import com.example.domain.repository.AuthRepository
 import com.example.domain.repository.CryptoCompareRepository
 import com.example.network.api.CryptoCompareApi
+import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,4 +19,9 @@ object RepositoryModule {
     @Singleton
     fun provideCryptoCompareRepository(api: CryptoCompareApi): CryptoCompareRepository =
         CryptoCompareRepositoryImpl(api)
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(auth: FirebaseAuth): AuthRepository =
+        AuthRepositoryImpl(auth)
 }
