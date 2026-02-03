@@ -13,53 +13,54 @@ import javax.inject.Inject
 import kotlin.error
 
 class AuthRepositoryImpl
-@Inject
-constructor(
-    private val auth: FirebaseAuth,
-) : AuthRepository {
-    override val currentUser: AuthUser?
-        get() = auth.currentUser?.toAuthUser()
+    @Inject
+    constructor(
+        private val auth: FirebaseAuth,
+    ) : AuthRepository {
+        override val currentUser: AuthUser?
+            get() = auth.currentUser?.toAuthUser()
 
-    override fun observeAuthState(): Flow<AuthUser?> =
-        callbackFlow {
-            val listener =
-                FirebaseAuth.AuthStateListener { firebaseAuth ->
-                    trySend(firebaseAuth.currentUser?.toAuthUser())
+        override fun observeAuthState(): Flow<AuthUser?> =
+            callbackFlow {
+                val listener =
+                    FirebaseAuth.AuthStateListener { firebaseAuth ->
+                        trySend(firebaseAuth.currentUser?.toAuthUser())
+                    }
+                auth.addAuthStateListener(listener)
+                awaitClose {
+                    auth.removeAuthStateListener(listener)
                 }
-            auth.addAuthStateListener(listener)
-            awaitClose {
-                auth.removeAuthStateListener(listener)
             }
-        }
 
-    override suspend fun signUpWithEmail(
-        email: String,
-        password: String,
-    ): Result<AuthUser> =
-        runCatching {
-            val result = auth.createUserWithEmailAndPassword(email, password).await()
-            val user = result.user ?: error("Firebase returned null user")
-            user.toAuthUser()
-        }
+        override suspend fun signUpWithEmail(
+            email: String,
+            password: String,
+        ): Result<AuthUser> =
+            runCatching {
+                val result = auth.createUserWithEmailAndPassword(email, password).await()
+                val user = result.user ?: error("Firebase returned null user")
+                user.toAuthUser()
+            }
 
-    override suspend fun singInWithEmail(
-        email: String,
-        password: String,
-    ): Result<AuthUser> =
-        runCatching {
-            val result = auth.signInWithEmailAndPassword(email, password).await()
-            val user = result.user ?: error("Firebase returned null user")
-            user.toAuthUser()
-        }
+        override suspend fun signInWithEmail(
+            email: String,
+            password: String,
+        ): Result<AuthUser> =
+            runCatching {
+                val result = auth.signInWithEmailAndPassword(email, password).await()
+                val user = result.user ?: error("Firebase returned null user")
+                user.toAuthUser()
+            }
 
-    override suspend fun singInWithGoogle(idToken: String): Result<AuthUser> = runCatching {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        val result = auth.signInWithCredential(credential).await()
-        val user = result.user ?: error("Firebase returned null user")
-        user.toAuthUser()
+        override suspend fun signInWithGoogle(idToken: String): Result<AuthUser> =
+            runCatching {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                val result = auth.signInWithCredential(credential).await()
+                val user = result.user ?: error("Firebase returned null user")
+                user.toAuthUser()
+            }
+
+        override suspend fun signOut() {
+            auth.signOut()
+        }
     }
-
-    override suspend fun signOut(){
-        auth.signOut()
-    }
-}
