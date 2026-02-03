@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.cryptocompare.navigation.AppNavigation
-import com.example.ui.theme.CryptocompareTheme
+import com.example.ui.theme.CryptoCompareTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            CryptocompareTheme {
+            CryptoCompareTheme {
                 AppNavigation()
             }
         }

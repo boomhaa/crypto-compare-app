@@ -4,7 +4,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 object Dimensions {
-
     // Spacing System (base 4dp)
     object Spacing {
         val xxs: Dp = 4.dp
@@ -51,7 +50,7 @@ object Dimensions {
         val xl: Dp = 20.dp
         val xxl: Dp = 28.dp
         val xxxl: Dp = 40.dp
-        val full: Dp = 9999.dp // круглый
+        val full: Dp = 9999.dp
 
         // Specific elements
         val button: Dp = 16.dp
@@ -235,8 +234,8 @@ object Grid {
  * Breakpoints для responsive design
  */
 object Breakpoints {
-    val compact: Dp = 600.dp  // Phone
-    val medium: Dp = 840.dp   // Tablet
+    val compact: Dp = 600.dp // Phone
+    val medium: Dp = 840.dp // Tablet
     val expanded: Dp = 1240.dp // Desktop
 }
 
@@ -244,32 +243,31 @@ object Breakpoints {
  * Animation Durations (in milliseconds)
  */
 object AnimationDuration {
-    const val instant: Int = 0
-    const val fast: Int = 150
-    const val normal: Int = 250
-    const val slow: Int = 400
-    const val verySlow: Int = 600
+    const val INSTANT = 0
+    const val FAST = 150
+    const val NORMAL = 250
+    const val SLOW = 400
+    const val VERY_SLOW = 600
 
-    // Specific animations
-    const val buttonPress: Int = 150
-    const val screenTransition: Int = 300
-    const val dialogFade: Int = 200
-    const val ripple: Int = 250
-    const val priceUpdate: Int = 300
+    const val BUTTON_PRESS = 150
+    const val SCREEN_TRANSITION = 300
+    const val DIALOG_FADE = 200
+    const val RIPPLE = 250
+    const val PRICE_UPDATE = 300
 }
 
 /**
  * Z-Index values for layers
  */
 object ZIndex {
-    const val background: Int = 0
-    const val content: Int = 1
-    const val card: Int = 2
-    const val appBar: Int = 10
-    const val bottomNav: Int = 10
-    const val fab: Int = 15
-    const val snackbar: Int = 20
-    const val dialog: Int = 30
-    const val tooltip: Int = 40
-    const val modal: Int = 50
+    const val BACKGROUND = 0
+    const val CONTENT = 1
+    const val CARD = 2
+    const val APP_BAR = 10
+    const val BOTTOM_NAV = 10
+    const val FAB = 15
+    const val SNACKBAR = 20
+    const val DIALOG = 30
+    const val TOOLTIP = 40
+    const val MODAL = 50
 }
