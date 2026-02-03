@@ -17,4 +17,6 @@ interface AuthRepository {
         email: String,
         password: String,
     ): Result<AuthUser>
+
+    suspend fun singInWithGoogle(idToken: String): Result<AuthUser>
 }
