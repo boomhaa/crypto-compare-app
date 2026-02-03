@@ -39,15 +39,24 @@ kotlin {
 }
 
 dependencies {
+    // modules
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:network"))
 
+    // coroutines
     implementation(libs.coroutines.core)
+    implementation(libs.coroutines.play.services)
 
+    // di
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    // firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+
+    // tests
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.mockk)
