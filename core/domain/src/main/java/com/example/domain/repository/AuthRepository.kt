@@ -8,5 +8,13 @@ interface AuthRepository {
 
     fun observeAuthState(): Flow<AuthUser?>
 
-    suspend fun signUpWithEmail(email: String, password: String): Result<AuthUser>
+    suspend fun signUpWithEmail(
+        email: String,
+        password: String,
+    ): Result<AuthUser>
+
+    suspend fun singInWithEmail(
+        email: String,
+        password: String,
+    ): Result<AuthUser>
 }
