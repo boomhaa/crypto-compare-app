@@ -58,4 +58,8 @@ constructor(
         val user = result.user ?: error("Firebase returned null user")
         user.toAuthUser()
     }
+
+    override suspend fun signOut(){
+        auth.signOut()
+    }
 }
