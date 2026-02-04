@@ -3,10 +3,12 @@
 /local.properties
 /.idea
 .DS_Store
-/build
+**/build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
 .idea
 app/google-services.json
+
+
