@@ -11,71 +11,78 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState = _uiState.asStateFlow()
+class LoginViewModel
+    @Inject
+    constructor(
+        private val authRepository: AuthRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(LoginUiState())
+        val uiState = _uiState.asStateFlow()
 
-    fun onEmailChange(email: String) {
-        _uiState.update { uiState -> uiState.copy(email = email) }
-    }
-
-    fun onPasswordChange(password: String) {
-        _uiState.update { uiState -> uiState.copy(password = password) }
-    }
-
-    fun signInWithEmail() {
-        val email = _uiState.value.email.trim()
-        val password = _uiState.value.password
-
-        if (!isValidEmail(email)) {
-            _uiState.update { uiState -> uiState.copy(errorMessage = "Incorrect email was entered") }
-            return
+        fun onEmailChange(email: String) {
+            _uiState.update { uiState -> uiState.copy(email = email) }
         }
 
-        if (password.length < 6) {
-            _uiState.update { it.copy(errorMessage = "Password must have more than 6 symbols") }
-            return
+        fun onPasswordChange(password: String) {
+            _uiState.update { uiState -> uiState.copy(password = password) }
         }
 
-        _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
+        fun signInWithEmail() {
+            val email = _uiState.value.email.trim()
+            val password = _uiState.value.password
 
-        viewModelScope.launch {
-            authRepository.signInWithEmail(email, password)
-                .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
-                .onFailure { error ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            errorMessage = error.message ?: "Login error"
-                        )
+            if (!isValidEmail(email)) {
+                _uiState.update { uiState -> uiState.copy(errorMessage = "Incorrect email was entered") }
+                return
+            }
+
+            if (password.length < 6) {
+                _uiState.update { it.copy(errorMessage = "Password must have more than 6 symbols") }
+                return
+            }
+
+            _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
+
+            viewModelScope.launch {
+                authRepository
+                    .signInWithEmail(email, password)
+                    .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
+                    .onFailure { error ->
+                        _uiState.update { uiState ->
+                            uiState.copy(
+                                isLoading = false,
+                                errorMessage = error.message ?: "Login error",
+                            )
+                        }
                     }
-                }
+            }
         }
-    }
 
-    fun signInWithGoogle(idToken: String){
-        _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
+        fun signInWithGoogle(idToken: String) {
+            _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
-            authRepository.signInWithGoogle(idToken)
-                .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
-                .onFailure { error ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            errorMessage = error.message ?: "Login error"
-                        )
+            viewModelScope.launch {
+                authRepository
+                    .signInWithGoogle(idToken)
+                    .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
+                    .onFailure { error ->
+                        _uiState.update { uiState ->
+                            uiState.copy(
+                                isLoading = false,
+                                errorMessage = error.message ?: "Login error",
+                            )
+                        }
                     }
-                }
+            }
+        }
+
+        fun onGoogleError(message: String) {
+            _uiState.update { it.copy(errorMessage = message) }
+        }
+
+        private fun isValidEmail(email: String): Boolean = email.isNotBlank() && EMAIL_REGEX.matches(email)
+
+        private companion object {
+            val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
         }
     }
-
-    private fun isValidEmail(email: String): Boolean =
-        email.isNotBlank() && EMAIL_REGEX.matches(email)
-
-    private companion object {
-        val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
-    }
-}

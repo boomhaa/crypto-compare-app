@@ -11,80 +11,87 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RegistrationViewModel @Inject constructor(
-    private val authRepository: AuthRepository
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(RegistrationUiState())
-    val uiState = _uiState.asStateFlow()
+class RegistrationViewModel
+    @Inject
+    constructor(
+        private val authRepository: AuthRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(RegistrationUiState())
+        val uiState = _uiState.asStateFlow()
 
-    fun onEmailChange(email: String) {
-        _uiState.update { uiState -> uiState.copy(email = email) }
-    }
-
-    fun onPasswordChange(password: String) {
-        _uiState.update { uiState -> uiState.copy(password = password) }
-    }
-
-    fun onConfirmPasswordChange(confirmPassword: String) {
-        _uiState.update { uiState -> uiState.copy(confirmPassword = confirmPassword) }
-    }
-
-    fun signUpWithEmail() {
-        val email = _uiState.value.email.trim()
-        val password = _uiState.value.password
-        val confirmPassword = _uiState.value.confirmPassword
-
-        if (!isValidEmail(email)) {
-            _uiState.update { uiState -> uiState.copy(errorMessage = "Incorrect email was entered") }
-            return
+        fun onEmailChange(email: String) {
+            _uiState.update { uiState -> uiState.copy(email = email) }
         }
 
-        if (password.length < 6 || !password.any { it.isLetter() } || !password.any { it.isDigit() }) {
-            _uiState.update { it.copy(errorMessage = "Password must be stronger") }
-            return
-        }
-        if (password != confirmPassword) {
-            _uiState.update { it.copy(errorMessage = "Passwords don't match") }
-            return
+        fun onPasswordChange(password: String) {
+            _uiState.update { uiState -> uiState.copy(password = password) }
         }
 
-        _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
+        fun onConfirmPasswordChange(confirmPassword: String) {
+            _uiState.update { uiState -> uiState.copy(confirmPassword = confirmPassword) }
+        }
 
-        viewModelScope.launch {
-            authRepository.signUpWithEmail(email, password)
-                .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
-                .onFailure { error ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            errorMessage = error.message ?: "Sign up error"
-                        )
+        fun signUpWithEmail() {
+            val email = _uiState.value.email.trim()
+            val password = _uiState.value.password
+            val confirmPassword = _uiState.value.confirmPassword
+
+            if (!isValidEmail(email)) {
+                _uiState.update { uiState -> uiState.copy(errorMessage = "Incorrect email was entered") }
+                return
+            }
+
+            if (password.length < 6 || !password.any { it.isLetter() } || !password.any { it.isDigit() }) {
+                _uiState.update { it.copy(errorMessage = "Password must be stronger") }
+                return
+            }
+            if (password != confirmPassword) {
+                _uiState.update { it.copy(errorMessage = "Passwords don't match") }
+                return
+            }
+
+            _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
+
+            viewModelScope.launch {
+                authRepository
+                    .signUpWithEmail(email, password)
+                    .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
+                    .onFailure { error ->
+                        _uiState.update { uiState ->
+                            uiState.copy(
+                                isLoading = false,
+                                errorMessage = error.message ?: "Sign up error",
+                            )
+                        }
                     }
-                }
+            }
         }
-    }
 
-    fun signUnWithGoogle(idToken: String){
-        _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
+        fun signUpWithGoogle(idToken: String) {
+            _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
-            authRepository.signInWithGoogle(idToken)
-                .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
-                .onFailure { error ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            errorMessage = error.message ?: "Login error"
-                        )
+            viewModelScope.launch {
+                authRepository
+                    .signInWithGoogle(idToken)
+                    .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
+                    .onFailure { error ->
+                        _uiState.update { uiState ->
+                            uiState.copy(
+                                isLoading = false,
+                                errorMessage = error.message ?: "Login error",
+                            )
+                        }
                     }
-                }
+            }
+        }
+
+        fun onGoogleError(message: String) {
+            _uiState.update { it.copy(errorMessage = message) }
+        }
+
+        private fun isValidEmail(email: String): Boolean = email.isNotBlank() && EMAIL_REGEX.matches(email)
+
+        private companion object {
+            val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
         }
     }
-
-    private fun isValidEmail(email: String): Boolean =
-        email.isNotBlank() && EMAIL_REGEX.matches(email)
-
-    private companion object {
-        val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
-    }
-}

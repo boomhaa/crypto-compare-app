@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.providers.navigation.ProvidersDestination
-import com.example.providers.navigation.ProvidersNavigation
+import com.example.auth.navigation.AuthDestination
+import com.example.auth.navigation.AuthNavigation
 
 @Composable
 fun AppNavigation() {
@@ -13,10 +13,10 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = ProvidersDestination.ROUTE,
+        startDestination = AuthDestination.ROUTE,
     ) {
-        composable(ProvidersDestination.ROUTE) {
-            ProvidersNavigation()
+        composable(AuthDestination.ROUTE) {
+            AuthNavigation()
         }
     }
 }

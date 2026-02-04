@@ -41,8 +41,8 @@ class AuthRepositoryImpl
                     val result = auth.createUserWithEmailAndPassword(email, password).await()
                     val user = result.user ?: error("Firebase returned null user")
                     user.toAuthUser()
-                }catch (e: Exception){
-                    error(e.message?:"Sign up with email error")
+                } catch (e: Exception) {
+                    error(e.message ?: "Sign up with email error")
                 }
             }
 
@@ -55,10 +55,9 @@ class AuthRepositoryImpl
                     val result = auth.signInWithEmailAndPassword(email, password).await()
                     val user = result.user ?: error("Firebase returned null user")
                     user.toAuthUser()
-                }catch (e: Exception){
-                    error(e.message?:"Sign in with email error")
+                } catch (e: Exception) {
+                    error(e.message ?: "Sign in with email error")
                 }
-
             }
 
         override suspend fun signInWithGoogle(idToken: String): Result<AuthUser> =
@@ -68,8 +67,8 @@ class AuthRepositoryImpl
                     val result = auth.signInWithCredential(credential).await()
                     val user = result.user ?: error("Firebase returned null user")
                     user.toAuthUser()
-                }catch (e: Exception){
-                    error(e.message?:"Sign in with google error")
+                } catch (e: Exception) {
+                    error(e.message ?: "Sign in with google error")
                 }
             }
 
