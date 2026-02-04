@@ -68,6 +68,11 @@ class RegistrationViewModel
         }
 
         fun signUpWithGoogle(idToken: String) {
+            if (idToken.isBlank()) {
+                _uiState.update { uiState -> uiState.copy(errorMessage = "Google token not found") }
+                return
+            }
+
             _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
 
             viewModelScope.launch {

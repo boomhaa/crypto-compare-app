@@ -66,5 +66,10 @@ dependencies {
     implementation(libs.play.services.auth)
     ksp(libs.hilt.compiler)
 
+    testImplementation(project(":core:testing"))
+    testImplementation(libs.junit)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.mockk)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
