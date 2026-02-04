@@ -37,9 +37,13 @@ class AuthRepositoryImpl
             password: String,
         ): Result<AuthUser> =
             runCatching {
-                val result = auth.createUserWithEmailAndPassword(email, password).await()
-                val user = result.user ?: error("Firebase returned null user")
-                user.toAuthUser()
+                try {
+                    val result = auth.createUserWithEmailAndPassword(email, password).await()
+                    val user = result.user ?: error("Firebase returned null user")
+                    user.toAuthUser()
+                } catch (e: Exception) {
+                    error(e.message ?: "Sign up with email error")
+                }
             }
 
         override suspend fun signInWithEmail(
@@ -47,17 +51,25 @@ class AuthRepositoryImpl
             password: String,
         ): Result<AuthUser> =
             runCatching {
-                val result = auth.signInWithEmailAndPassword(email, password).await()
-                val user = result.user ?: error("Firebase returned null user")
-                user.toAuthUser()
+                try {
+                    val result = auth.signInWithEmailAndPassword(email, password).await()
+                    val user = result.user ?: error("Firebase returned null user")
+                    user.toAuthUser()
+                } catch (e: Exception) {
+                    error(e.message ?: "Sign in with email error")
+                }
             }
 
         override suspend fun signInWithGoogle(idToken: String): Result<AuthUser> =
             runCatching {
-                val credential = GoogleAuthProvider.getCredential(idToken, null)
-                val result = auth.signInWithCredential(credential).await()
-                val user = result.user ?: error("Firebase returned null user")
-                user.toAuthUser()
+                try {
+                    val credential = GoogleAuthProvider.getCredential(idToken, null)
+                    val result = auth.signInWithCredential(credential).await()
+                    val user = result.user ?: error("Firebase returned null user")
+                    user.toAuthUser()
+                } catch (e: Exception) {
+                    error(e.message ?: "Sign in with google error")
+                }
             }
 
         override suspend fun signOut() {

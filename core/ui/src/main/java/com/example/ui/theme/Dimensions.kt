@@ -139,7 +139,7 @@ object Dimensions {
         val divider: Dp = 1.dp
     }
 
-    // Gaps (для Row, Column)
+    // Gaps (for Row, Column)
     object Gap {
         val xs: Dp = 4.dp
         val sm: Dp = 8.dp
@@ -222,7 +222,7 @@ object Dimensions {
 }
 
 /**
- * Grid System для layout
+ * Grid System for layout
  */
 object Grid {
     val columns: Int = 4
@@ -231,7 +231,7 @@ object Grid {
 }
 
 /**
- * Breakpoints для responsive design
+ * Breakpoints for responsive design
  */
 object Breakpoints {
     val compact: Dp = 600.dp // Phone

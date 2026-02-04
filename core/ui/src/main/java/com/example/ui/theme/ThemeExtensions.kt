@@ -309,12 +309,9 @@ val ColorScheme.cosmicPurpleLight: Color
     get() = CosmicPurpleLight
 
 // ============================================
-// GRADIENT COLORS (для использования в Brush)
+// GRADIENT COLORS
 // ============================================
 
-/**
- * Для градиентов используйте эти свойства напрямую в Brush.linearGradient
- */
 object CryptoGradients {
     val primary: List<Color>
         get() = listOf(GradientPrimaryStart, GradientPrimaryEnd)
@@ -349,14 +346,8 @@ object CryptoGradients {
 // HELPER EXTENSIONS
 // ============================================
 
-/**
- * Получить цвет для положительного/отрицательного изменения
- */
 fun ColorScheme.priceChangeColor(isPositive: Boolean): Color = if (isPositive) chartPositive else chartNegative
 
-/**
- * Получить background цвет для badge по типу
- */
 fun ColorScheme.badgeBackground(type: BadgeType): Color =
     when (type) {
         BadgeType.Success -> badgeSuccessBg
@@ -365,9 +356,6 @@ fun ColorScheme.badgeBackground(type: BadgeType): Color =
         BadgeType.Info -> badgeInfoBg
     }
 
-/**
- * Получить text цвет для badge по типу
- */
 fun ColorScheme.badgeText(type: BadgeType): Color =
     when (type) {
         BadgeType.Success -> badgeSuccessText
@@ -376,9 +364,6 @@ fun ColorScheme.badgeText(type: BadgeType): Color =
         BadgeType.Info -> badgeInfoText
     }
 
-/**
- * Enum для типов badges
- */
 enum class BadgeType {
     Success,
     Error,

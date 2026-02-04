@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 /**
- * Dark Color Scheme для Crypto Compare
+ * Dark Color Scheme for Crypto Compare
  */
 private val CryptoDarkColorScheme =
     darkColorScheme(
