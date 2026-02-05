@@ -46,8 +46,11 @@ class LoginViewModel
             viewModelScope.launch {
                 authRepository
                     .signInWithEmail(email, password)
-                    .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
-                    .onFailure { error ->
+                    .onSuccess {
+                        _uiState.update { uiState ->
+                            uiState.copy(isLoading = false, isAuthenticated = true)
+                        }
+                    }.onFailure { error ->
                         _uiState.update { uiState ->
                             uiState.copy(
                                 isLoading = false,
@@ -69,8 +72,11 @@ class LoginViewModel
             viewModelScope.launch {
                 authRepository
                     .signInWithGoogle(idToken)
-                    .onSuccess { _uiState.update { uiState -> uiState.copy(isLoading = false) } }
-                    .onFailure { error ->
+                    .onSuccess {
+                        _uiState.update { uiState ->
+                            uiState.copy(isLoading = false, isAuthenticated = true)
+                        }
+                    }.onFailure { error ->
                         _uiState.update { uiState ->
                             uiState.copy(
                                 isLoading = false,

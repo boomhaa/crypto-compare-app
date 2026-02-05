@@ -54,6 +54,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:network"))
     implementation(project(":core:data"))
+    implementation(project(":core:helpers"))
     implementation(project(":feature:providers"))
     implementation(project(":feature:auth"))
 

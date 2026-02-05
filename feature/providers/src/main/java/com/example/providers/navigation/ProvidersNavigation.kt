@@ -12,9 +12,9 @@ fun ProvidersNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Screens.Providers.route,
+        startDestination = ProvidersScreens.Providers.route,
     ) {
-        composable(route = Screens.Providers.route) {
+        composable(route = ProvidersScreens.Providers.route) {
             ProvidersScreen()
         }
     }

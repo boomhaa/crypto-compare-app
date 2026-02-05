@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,6 +33,7 @@ import com.example.ui.theme.Dimensions
 @Composable
 fun RegisterScreen(
     onLoginClick: () -> Unit,
+    onAuthenticated: () -> Unit,
     viewModel: RegistrationViewModel = hiltViewModel(),
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -41,6 +43,12 @@ fun RegisterScreen(
             onToken = viewModel::signUpWithGoogle,
             onError = viewModel::onGoogleError,
         )
+
+    LaunchedEffect(uiState.isAuthenticated) {
+        if (uiState.isAuthenticated) {
+            onAuthenticated()
+        }
+    }
 
     AuthBackground {
         Column(

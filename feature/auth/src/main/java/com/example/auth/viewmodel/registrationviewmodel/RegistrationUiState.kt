@@ -5,6 +5,7 @@ data class RegistrationUiState(
     val password: String = "",
     val confirmPassword: String = "",
     val isLoading: Boolean = false,
+    val isAuthenticated: Boolean = false,
     val errorMessage: String? = null,
     val passwordLengthMet: Boolean = false,
     val passwordLetterMet: Boolean = false,
