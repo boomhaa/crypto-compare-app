@@ -6,4 +6,6 @@ sealed class AuthScreens(
     object LoginScreen : AuthScreens("login")
 
     object RegisterScreen : AuthScreens("register")
+
+    object SplashScreen : AuthScreens("splash")
 }
