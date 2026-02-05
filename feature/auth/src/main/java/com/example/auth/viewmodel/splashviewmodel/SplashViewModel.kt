@@ -41,6 +41,7 @@ class SplashViewModel
                         _uiState.update { uiState ->
                             uiState.copy(
                                 isCheckAuth = false,
+                                isAuthenticated = false,
                                 errorMessage = error.message ?: "Network error. Please try again!",
                             )
                         }
