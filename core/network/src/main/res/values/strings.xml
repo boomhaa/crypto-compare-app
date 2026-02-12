@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">network</string>
     <string name="base_url">http://89.251.146.26:8081/v1/</string>
+    <string name="ws_url">ws://89.251.146.26.:8081</string>
 </resources>

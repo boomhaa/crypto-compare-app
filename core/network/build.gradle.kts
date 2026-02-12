@@ -40,13 +40,19 @@ kotlin {
 
 dependencies {
     api(project(":core:model"))
+    implementation(project(":core:helpers"))
 
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.coroutines.core)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
     testImplementation(libs.mockwebserver)
 }

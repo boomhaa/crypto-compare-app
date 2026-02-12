@@ -21,9 +21,9 @@ fun AppNavigation() {
         startDestination = AuthDestination.ROUTE,
     ) {
         composable(AuthDestination.ROUTE) {
-            AuthNavigation({
+            AuthNavigation {
                 navController.navigateAndClearStack(ProvidersScreens.Providers.route, AuthScreens.SplashScreen.route)
-            })
+            }
         }
 
         composable(ProvidersDestination.ROUTE) {
