@@ -5,5 +5,5 @@ data class SymbolPriceChangeData(
     val symbolId: Int,
     val providerId: Int,
     val priceSell: Double,
-    val priceBuy: Double
+    val priceBuy: Double,
 )

@@ -15,6 +15,7 @@ android {
 
     defaultConfig {
         minSdk = 26
+        buildConfigField("String", "BASE_URL", "\"http://89.251.146.26:8081/v1/\"")
     }
 
     buildTypes {
@@ -29,6 +30,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 }
 

@@ -2,13 +2,17 @@ package com.example.network.websocket
 
 sealed class ConnectionState {
     object Connecting : ConnectionState()
+
     object Connected : ConnectionState()
+
     object Disconnected : ConnectionState()
+
     data class Reconnecting(
         val attempts: Int,
-        val timeDelay: Long
+        val timeDelay: Long,
     ) : ConnectionState()
+
     data class Error(
-        val errorMsg: String
+        val errorMsg: String,
     ) : ConnectionState()
 }

@@ -1,5 +1,6 @@
 package com.example.data.di
 
+import com.example.data.BuildConfig
 import com.example.data.repository.AuthRepositoryImpl
 import com.example.data.repository.CryptoCompareRepositoryImpl
 import com.example.data.repository.TickerStreamRepositoryImpl
@@ -13,11 +14,17 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
+    @Provides
+    @Singleton
+    @Named("wsUrl")
+    fun provideWebSocketUrl(): String = BuildConfig.WS_BASE_URL
+
     @Provides
     @Singleton
     fun provideCryptoCompareRepository(api: CryptoCompareApi): CryptoCompareRepository =
@@ -29,6 +36,8 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideTickerStreamRepository(webSocketClient: WebSocketClient): TickerStreamRepository =
-        TickerStreamRepositoryImpl(webSocketClient)
+    fun provideTickerStreamRepository(
+        webSocketClient: WebSocketClient,
+        @Named("wsUrl") wsUrl: String,
+    ): TickerStreamRepository = TickerStreamRepositoryImpl(webSocketClient, wsUrl)
 }

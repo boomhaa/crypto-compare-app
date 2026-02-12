@@ -5,5 +5,5 @@ data class TickerPrice(
     val symbolId: Int,
     val providerId: Int,
     val priceSell: Double,
-    val priceBuy: Double
+    val priceBuy: Double,
 )

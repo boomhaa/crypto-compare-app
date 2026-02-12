@@ -8,9 +8,11 @@ interface TickerStreamRepository {
     val connectionState: Flow<TickerConnectionState>
     val event: Flow<TickerStreamEvent>
 
-    fun connect(url: String)
+    fun connect()
+
     fun disconnect()
 
     fun subscribe(ticker: String): Boolean
+
     fun unsubscribe(ticker: String): Boolean
 }
