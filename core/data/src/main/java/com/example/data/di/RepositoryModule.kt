@@ -2,9 +2,12 @@ package com.example.data.di
 
 import com.example.data.repository.AuthRepositoryImpl
 import com.example.data.repository.CryptoCompareRepositoryImpl
+import com.example.data.repository.TickerStreamRepositoryImpl
 import com.example.domain.repository.AuthRepository
 import com.example.domain.repository.CryptoCompareRepository
+import com.example.domain.repository.TickerStreamRepository
 import com.example.network.api.CryptoCompareApi
+import com.example.network.websocket.WebSocketClient
 import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
 import dagger.Provides
@@ -23,4 +26,9 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideAuthRepository(auth: FirebaseAuth): AuthRepository = AuthRepositoryImpl(auth)
+
+    @Provides
+    @Singleton
+    fun provideTickerStreamRepository(webSocketClient: WebSocketClient): TickerStreamRepository =
+        TickerStreamRepositoryImpl(webSocketClient)
 }
