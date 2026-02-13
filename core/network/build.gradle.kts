@@ -15,6 +15,7 @@ android {
 
     defaultConfig {
         minSdk = 26
+        buildConfigField("String", "BASE_URL", "\"http://89.251.146.26:8081/v1/\"")
     }
 
     buildTypes {
@@ -30,6 +31,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 kotlin {
@@ -40,13 +45,19 @@ kotlin {
 
 dependencies {
     api(project(":core:model"))
+    implementation(project(":core:helpers"))
 
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.coroutines.core)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
     testImplementation(libs.mockwebserver)
 }
