@@ -4,8 +4,8 @@ import com.example.data.repository.CryptoCompareRepositoryImpl
 import com.example.model.Provider
 import com.example.model.ProviderStatus
 import com.example.network.api.CryptoCompareApi
-import com.example.network.dto.GetProvidesResponse
-import com.example.network.dto.ProviderDto
+import com.example.network.dto.apiDTO.GetProvidersResponse
+import com.example.network.dto.apiDTO.ProviderDto
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
@@ -25,11 +25,7 @@ class CryptoCompareRepositoryImplTest {
         name = name,
         webSite = "https://p$id.example",
         baseUrl = "https://api.p$id.example",
-        accessKey = null,
-        secretKey = null,
         status = status,
-        createdAt = "",
-        updatedAt = "",
     )
 
     @Test
@@ -39,7 +35,7 @@ class CryptoCompareRepositoryImplTest {
             val repo = CryptoCompareRepositoryImpl(api)
 
             coEvery { api.getProviders() } returns
-                GetProvidesResponse(
+                GetProvidersResponse(
                     errorCode = 0,
                     errorMsgs = null,
                     providers = listOf(providerDto(1, name = "Binance"), providerDto(2, name = null)),
@@ -54,7 +50,6 @@ class CryptoCompareRepositoryImplTest {
             assertEquals("Binance", providers[0].name)
             assertEquals(ProviderStatus.Enabled, providers[0].status)
             assertEquals(2, providers[1].id)
-            // Mapper делает name.orEmpty() -> ""
             assertEquals("", providers[1].name)
         }
 
@@ -65,7 +60,7 @@ class CryptoCompareRepositoryImplTest {
             val repo = CryptoCompareRepositoryImpl(api)
 
             coEvery { api.getProviders() } returns
-                GetProvidesResponse(
+                GetProvidersResponse(
                     errorCode = 0,
                     errorMsgs = null,
                     providers = null,
@@ -84,7 +79,7 @@ class CryptoCompareRepositoryImplTest {
             val repo = CryptoCompareRepositoryImpl(api)
 
             coEvery { api.getProviders() } returns
-                GetProvidesResponse(
+                GetProvidersResponse(
                     errorCode = 10,
                     errorMsgs = listOf("E1", "E2"),
                     providers = null,
@@ -105,7 +100,7 @@ class CryptoCompareRepositoryImplTest {
             val repo = CryptoCompareRepositoryImpl(api)
 
             coEvery { api.getProviders() } returns
-                GetProvidesResponse(
+                GetProvidersResponse(
                     errorCode = 1,
                     errorMsgs = null,
                     providers = null,
