@@ -41,6 +41,7 @@ kotlin {
 
 dependencies {
     implementation(project(":core:domain"))
+    implementation(project(":core:data"))
     implementation(project(":core:model"))
     implementation(project(":core:ui"))
 
@@ -56,6 +57,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.androidx.compose.foundation)
     ksp(libs.hilt.compiler)
 
     testImplementation(project(":core:testing"))

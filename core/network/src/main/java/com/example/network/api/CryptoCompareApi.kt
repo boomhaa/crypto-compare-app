@@ -20,19 +20,19 @@ interface CryptoCompareApi {
         @Path("id") id: Int,
     ): GetProviderResponse
 
-    @GET("v1/symbols/provider/{providerId}")
+    @GET("symbols/provider/{providerId}")
     suspend fun getSymbolsByProvider(
         @Path("providerId") providerId: Int,
         @Query("skip") skip: Int? = null,
         @Query("rows") rows: Int? = null,
     ): GetSymbolsResponse
 
-    @GET("v1/symbols/{id}")
+    @GET("symbols/{id}")
     suspend fun getSymbol(
         @Path("id") id: Long,
     ): GetSymbolResponse
 
-    @GET("v1/symbols/ticker/{ticker}")
+    @GET("symbols/ticker/{ticker}")
     suspend fun getSymbolsByTicker(
         @Path("ticker") ticker: String,
     ): GetSymbolsResponse

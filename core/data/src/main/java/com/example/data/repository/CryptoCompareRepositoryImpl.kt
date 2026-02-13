@@ -1,8 +1,10 @@
 package com.example.data.repository
 
+import android.util.Log
 import com.example.data.mapper.toDomain
 import com.example.domain.repository.CryptoCompareRepository
 import com.example.model.Provider
+import com.example.model.Symbol
 import com.example.network.api.CryptoCompareApi
 import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
@@ -29,4 +31,30 @@ class CryptoCompareRepositoryImpl
             } catch (e: Exception) {
                 Result.failure(e)
             }
+
+        override suspend fun getSymbols(): Result<List<Symbol>> {
+            return try {
+                val providersResponse = cryptoCompareApi.getProviders()
+
+                if (providersResponse.errorCode != 0) {
+                    val message = providersResponse.errorMsgs?.joinToString("\n") ?: "Unknown error"
+                    return Result.failure(Exception(message))
+                }
+
+                val allSymbols =
+                    providersResponse.providers.orEmpty().flatMap { provider ->
+                        val symbolsResponse = cryptoCompareApi.getSymbolsByProvider(providerId = provider.id)
+                        symbolsResponse.symbols?.toString()?.let { Log.d("CryptoCompareRepoImpl", it) }
+                        if (symbolsResponse.errorCode != 0) {
+                            val message = symbolsResponse.errorMsgs?.joinToString("\n") ?: "Unknown error"
+                            throw IllegalStateException(message)
+                        }
+                        symbolsResponse.symbols.orEmpty().toDomain()
+                    }
+
+                Result.success(allSymbols)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
     }

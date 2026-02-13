@@ -55,7 +55,7 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:data"))
     implementation(project(":core:helpers"))
-    implementation(project(":feature:providers"))
+    implementation(project(":feature:pairs"))
     implementation(project(":feature:auth"))
 
     implementation(libs.androidx.core.ktx)
