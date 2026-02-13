@@ -9,6 +9,7 @@ import com.example.network.dto.webSocketDTO.dataTypes.SymbolPriceChangeData
 import com.example.network.dto.webSocketDTO.dataTypes.TickerData
 import com.example.network.dto.webSocketDTO.dataTypes.WelcomeData
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -36,10 +37,11 @@ import kotlin.random.Random
 class WebSocketClient
     @Inject
     constructor(
-        val gson: Gson,
-        val okHttpClient: OkHttpClient,
+        private val gson: Gson,
+        private val okHttpClient: OkHttpClient,
+        private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     ) {
-        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        private val scope = CoroutineScope(SupervisorJob() + dispatcher)
 
         private val subscribedTickers = mutableSetOf<String>()
         private val lock = Any()
