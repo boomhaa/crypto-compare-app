@@ -1,7 +1,7 @@
 package com.example.data.mapper
 
 import com.example.model.Provider
-import com.example.network.dto.ProviderDto
+import com.example.network.dto.apiDTO.ProviderDto
 
 fun ProviderDto.toDomain(): Provider =
     Provider(
