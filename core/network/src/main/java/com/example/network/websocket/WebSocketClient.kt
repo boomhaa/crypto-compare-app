@@ -29,6 +29,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 import kotlin.math.min
 import kotlin.random.Random
@@ -39,7 +40,7 @@ class WebSocketClient
     constructor(
         private val gson: Gson,
         private val okHttpClient: OkHttpClient,
-        private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+        @Named("ioDispatcher") private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     ) {
         private val scope = CoroutineScope(SupervisorJob() + dispatcher)
 

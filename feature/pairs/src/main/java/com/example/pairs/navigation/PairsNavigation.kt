@@ -1,21 +1,21 @@
-package com.example.providers.navigation
+package com.example.pairs.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.providers.ui.screens.providersScreen.ProvidersScreen
+import com.example.pairs.ui.screens.mainScreen.MainScreen
 
 @Composable
-fun ProvidersNavigation() {
+fun PairsNavigation() {
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = ProvidersScreens.Providers.route,
+        startDestination = PairsScreens.MainScreen.route,
     ) {
-        composable(route = ProvidersScreens.Providers.route) {
-            ProvidersScreen()
+        composable(route = PairsScreens.MainScreen.route) {
+            MainScreen()
         }
     }
 }

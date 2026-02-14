@@ -6,11 +6,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.auth.navigation.AuthDestination
 import com.example.auth.navigation.AuthNavigation
-import com.example.auth.navigation.AuthScreens
 import com.example.helpers.navigateAndClearStack
-import com.example.providers.navigation.ProvidersDestination
-import com.example.providers.navigation.ProvidersNavigation
-import com.example.providers.navigation.ProvidersScreens
+import com.example.pairs.navigation.PairsDestination
+import com.example.pairs.navigation.PairsNavigation
 
 @Composable
 fun AppNavigation() {
@@ -22,12 +20,12 @@ fun AppNavigation() {
     ) {
         composable(AuthDestination.ROUTE) {
             AuthNavigation {
-                navController.navigateAndClearStack(ProvidersScreens.Providers.route, AuthScreens.SplashScreen.route)
+                navController.navigateAndClearStack(PairsDestination.ROUTE, AuthDestination.ROUTE)
             }
         }
 
-        composable(ProvidersDestination.ROUTE) {
-            ProvidersNavigation()
+        composable(PairsDestination.ROUTE) {
+            PairsNavigation()
         }
     }
 }
