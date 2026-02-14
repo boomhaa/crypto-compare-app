@@ -1,4 +1,4 @@
-package com.example.providers.viewmodel.mainViewModel
+package com.example.pairs.viewmodel.mainViewModel
 
 import com.example.model.PairUiItem
 

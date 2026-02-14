@@ -1,4 +1,4 @@
-package com.example.providers.navigation
+package com.example.pairs.navigation
 
 sealed class PairsScreens(
     val route: String,

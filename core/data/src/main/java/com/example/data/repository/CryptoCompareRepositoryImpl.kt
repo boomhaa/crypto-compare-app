@@ -1,6 +1,5 @@
 package com.example.data.repository
 
-import android.util.Log
 import com.example.data.mapper.toDomain
 import com.example.domain.repository.CryptoCompareRepository
 import com.example.model.Provider
@@ -44,7 +43,6 @@ class CryptoCompareRepositoryImpl
                 val allSymbols =
                     providersResponse.providers.orEmpty().flatMap { provider ->
                         val symbolsResponse = cryptoCompareApi.getSymbolsByProvider(providerId = provider.id)
-                        symbolsResponse.symbols?.toString()?.let { Log.d("CryptoCompareRepoImpl", it) }
                         if (symbolsResponse.errorCode != 0) {
                             val message = symbolsResponse.errorMsgs?.joinToString("\n") ?: "Unknown error"
                             throw IllegalStateException(message)
@@ -53,6 +51,8 @@ class CryptoCompareRepositoryImpl
                     }
 
                 Result.success(allSymbols)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Result.failure(e)
             }

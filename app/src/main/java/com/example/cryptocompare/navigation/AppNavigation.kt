@@ -7,8 +7,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.auth.navigation.AuthDestination
 import com.example.auth.navigation.AuthNavigation
 import com.example.helpers.navigateAndClearStack
-import com.example.providers.navigation.PairsDestination
-import com.example.providers.navigation.PairsNavigation
+import com.example.pairs.navigation.PairsDestination
+import com.example.pairs.navigation.PairsNavigation
 
 @Composable
 fun AppNavigation() {

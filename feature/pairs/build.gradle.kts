@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.providers"
+    namespace = "com.example.pairs"
     compileSdk {
         version = release(36)
     }
@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
     implementation(project(":core:model"))
+    implementation(project(":core:helpers"))
     implementation(project(":core:ui"))
 
     implementation(libs.androidx.lifecycle.runtime.ktx)

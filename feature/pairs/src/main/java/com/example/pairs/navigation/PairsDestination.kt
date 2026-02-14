@@ -1,4 +1,4 @@
-package com.example.providers.navigation
+package com.example.pairs.navigation
 
 object PairsDestination {
     const val ROUTE: String = "pairs"

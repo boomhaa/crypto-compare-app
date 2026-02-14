@@ -1,10 +1,10 @@
-package com.example.providers.navigation
+package com.example.pairs.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.providers.ui.screens.mainScreen.MainScreen
+import com.example.pairs.ui.screens.mainScreen.MainScreen
 
 @Composable
 fun PairsNavigation() {

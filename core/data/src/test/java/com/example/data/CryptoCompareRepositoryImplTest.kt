@@ -5,7 +5,9 @@ import com.example.model.Provider
 import com.example.model.ProviderStatus
 import com.example.network.api.CryptoCompareApi
 import com.example.network.dto.apiDTO.GetProvidersResponse
+import com.example.network.dto.apiDTO.GetSymbolsResponse
 import com.example.network.dto.apiDTO.ProviderDto
+import com.example.network.dto.apiDTO.SymbolDto
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
@@ -135,5 +137,38 @@ class CryptoCompareRepositoryImplTest {
             coEvery { api.getProviders() } throws CancellationException("cancel")
 
             repo.getProviders()
+        }
+
+    @Test
+    fun `getAllSymbols returns flattened symbols for all providers`() =
+        runTest {
+            val api = mockk<CryptoCompareApi>()
+            val repo = CryptoCompareRepositoryImpl(api)
+
+            coEvery { api.getProviders() } returns
+                GetProvidersResponse(
+                    errorCode = 0,
+                    errorMsgs = null,
+                    providers = listOf(providerDto(1), providerDto(2)),
+                )
+
+            coEvery { api.getSymbolsByProvider(1, any(), any()) } returns
+                GetSymbolsResponse(
+                    errorCode = 0,
+                    errorMsgs = null,
+                    symbols = listOf(SymbolDto(11L, "btcusdt", "BTC/USDT", 1, 101.0, 99.0, "")),
+                )
+
+            coEvery { api.getSymbolsByProvider(2, null, null) } returns
+                GetSymbolsResponse(
+                    errorCode = 0,
+                    errorMsgs = null,
+                    symbols = listOf(SymbolDto(21L, "ethusdt", "ETH/USDT", 2, 11.0, 10.5, "")),
+                )
+
+            val result = repo.getSymbols()
+
+            assertTrue(result.isSuccess)
+            assertEquals(2, result.getOrThrow().size)
         }
 }
