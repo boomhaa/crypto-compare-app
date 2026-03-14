@@ -1,6 +1,5 @@
 package com.example.network.websocket
 
-import android.util.Log
 import com.example.helpers.util.Constants
 import com.example.network.dto.webSocketDTO.SocketDtoMessage
 import com.example.network.dto.webSocketDTO.SocketInboundRawMessage

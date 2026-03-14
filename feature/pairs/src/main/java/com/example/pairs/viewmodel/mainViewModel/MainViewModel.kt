@@ -1,6 +1,5 @@
 package com.example.pairs.viewmodel.mainViewModel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.mapper.toPairItemByTicker
@@ -106,34 +105,13 @@ class MainViewModel
                         val normalizedTicker = updatedSymbol.ticker?.uppercase().orEmpty()
                         if (normalizedTicker.isEmpty()) return@collect
 
-                        val sameTickerSymbols =
-                            symbolsById.values.filter {
-                                it.ticker?.uppercase().orEmpty() == normalizedTicker
-                            }
-
-                        Log.d(
-                            "SocketDebug",
-                            "sameTickerSymbols for $normalizedTicker = ${
-                                sameTickerSymbols.joinToString {
-                                    "[id=${it.id}, provider=${it.providerId}, buy=${it.priceBuy}, sell=${it.priceSell}]"
-                                }
-                            }",
-                        )
-
                         val updatedItem =
                             symbolsById.values.toPairItemByTicker(normalizedTicker)
                                 ?: return@collect
 
-                        Log.d("SocketDebug", "updatedItem=$updatedItem")
-
                         _uiState.update { state ->
                             val currentPairs = state.pairs.toMutableList()
                             val index = currentPairs.indexOfFirst { it.ticker == normalizedTicker }
-
-                            Log.d(
-                                "SocketDebug",
-                                "pair index for $normalizedTicker = $index, currentUiSize=${currentPairs.size}",
-                            )
 
                             if (index == -1) {
                                 state

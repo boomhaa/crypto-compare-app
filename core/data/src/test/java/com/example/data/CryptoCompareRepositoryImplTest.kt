@@ -140,35 +140,37 @@ class CryptoCompareRepositoryImplTest {
         }
 
     @Test
-    fun `getAllSymbols returns flattened symbols for all providers`() =
+    fun `getSymbols emits paged data and stops when API returns empty page`() =
         runTest {
             val api = mockk<CryptoCompareApi>()
             val repo = CryptoCompareRepositoryImpl(api)
 
-            coEvery { api.getProviders() } returns
-                GetProvidersResponse(
-                    errorCode = 0,
-                    errorMsgs = null,
-                    providers = listOf(providerDto(1), providerDto(2)),
-                )
-
-            coEvery { api.getSymbolsByProvider(1, any(), any()) } returns
+            coEvery { api.getSymbols(skip = 0, rows = 25) } returns
                 GetSymbolsResponse(
                     errorCode = 0,
                     errorMsgs = null,
                     symbols = listOf(SymbolDto(11L, "btcusdt", "BTC/USDT", 1, 101.0, 99.0, "")),
                 )
 
-            coEvery { api.getSymbolsByProvider(2, null, null) } returns
+            coEvery { api.getSymbols(skip = 25, rows = 25) } returns
                 GetSymbolsResponse(
                     errorCode = 0,
                     errorMsgs = null,
                     symbols = listOf(SymbolDto(21L, "ethusdt", "ETH/USDT", 2, 11.0, 10.5, "")),
                 )
 
-            val result = repo.getSymbols()
+            coEvery { api.getSymbols(skip = 50, rows = 25) } returns
+                GetSymbolsResponse(
+                    errorCode = 0,
+                    errorMsgs = null,
+                    symbols = emptyList(),
+                )
 
-            assertTrue(result.isSuccess)
-            assertEquals(2, result.getOrThrow().size)
+            val pages = mutableListOf<List<com.example.model.Symbol>>()
+            repo.getSymbols().collect { pages.add(it) }
+
+            assertEquals(2, pages.size)
+            assertEquals("btcusdt", pages[0].single().ticker)
+            assertEquals("ethusdt", pages[1].single().ticker)
         }
 }
