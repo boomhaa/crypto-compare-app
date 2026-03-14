@@ -57,7 +57,8 @@ class MainViewModelTest {
             assertEquals(true, vm.uiState.value.loading)
             assertNull(vm.uiState.value.error)
 
-            verify { tickerRepo.connect() }
+            yield()
+            verify(exactly = 1) { tickerRepo.connect() }
         }
 
     @Test
