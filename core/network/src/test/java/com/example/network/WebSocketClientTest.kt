@@ -30,7 +30,6 @@ import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -148,29 +147,34 @@ class WebSocketClientTest {
         }
 
     @Test
-    fun `subscribe when connected should return true`() =
+    fun `subscribe when connected should send subscribe message`() =
         testScope.runTest {
             client.connect("wss://api.example.com/ws")
             simulateWebSocketOpen()
             every { mockWebSocket.send(any<String>()) } returns true
 
-            val result = client.subscribe("BTCUSDT")
+            client.subscribe("BTCUSDT")
 
-            assertTrue(result)
+            verify(exactly = 1) {
+                mockWebSocket.send(
+                    match<String> { msg ->
+                        msg.contains("\"type\":${MessageType.SUBSCRIBE.type}") &&
+                            msg.contains("\"ticker\":\"btcusdt\"")
+                    },
+                )
+            }
         }
 
     @Test
-    fun `subscribe same ticker twice should return false second time`() =
+    fun `subscribe same ticker twice should send only one message`() =
         testScope.runTest {
             client.connect("wss://api.example.com/ws")
             simulateWebSocketOpen()
             every { mockWebSocket.send(any<String>()) } returns true
 
-            val firstResult = client.subscribe("BTCUSDT")
-            val secondResult = client.subscribe("BTCUSDT")
+            client.subscribe("BTCUSDT")
+            client.subscribe("BTCUSDT")
 
-            assertTrue(firstResult)
-            assertFalse(secondResult)
             verify(exactly = 1) { mockWebSocket.send(any<String>()) }
         }
 
@@ -187,27 +191,35 @@ class WebSocketClientTest {
         }
 
     @Test
-    fun `unsubscribe existing ticker should return true`() =
+    fun `unsubscribe existing ticker should send unsubscribe message`() =
         testScope.runTest {
             client.connect("wss://api.example.com/ws")
             simulateWebSocketOpen()
             every { mockWebSocket.send(any<String>()) } returns true
             client.subscribe("BTCUSDT")
+            clearMocks(mockWebSocket, answers = false)
 
-            val result = client.unsubscribe("BTCUSDT")
+            client.unsubscribe("BTCUSDT")
 
-            assertTrue(result)
+            verify(exactly = 1) {
+                mockWebSocket.send(
+                    match<String> { msg ->
+                        msg.contains("\"type\":${MessageType.UNSUBSCRIBE.type}") &&
+                            msg.contains("\"ticker\":\"btcusdt\"")
+                    },
+                )
+            }
         }
 
     @Test
-    fun `unsubscribe non-existing ticker should return false`() =
+    fun `unsubscribe non-existing ticker should not send message`() =
         testScope.runTest {
             client.connect("wss://api.example.com/ws")
             simulateWebSocketOpen()
 
-            val result = client.unsubscribe("BTCUSDT")
+            client.unsubscribe("BTCUSDT")
 
-            assertFalse(result)
+            verify(exactly = 0) { mockWebSocket.send(any<String>()) }
         }
 
     @Test
@@ -316,12 +328,14 @@ class WebSocketClientTest {
             client.connect("wss://api.example.com/ws")
 
             client.connectionState.test {
-                while (awaitItem() != ConnectionState.Connecting) { /* skip */ }
+                while (awaitItem() != ConnectionState.Connecting) { // skip
+                }
 
                 simulateWebSocketOpen()
                 advanceUntilIdle()
 
-                while (awaitItem() != ConnectionState.Connected) { /* skip */ }
+                while (awaitItem() != ConnectionState.Connected) { // skip
+                }
 
                 simulateWebSocketClosed(1001, "Going away")
                 advanceUntilIdle()
@@ -352,7 +366,8 @@ class WebSocketClientTest {
                 simulateWebSocketClosed(1006, "Abnormal closure")
                 advanceUntilIdle()
 
-                while (awaitItem() != ConnectionState.Disconnected) {}
+                while (awaitItem() != ConnectionState.Disconnected) {
+                }
 
                 val rec = awaitItem()
                 require(rec is ConnectionState.Reconnecting)
@@ -390,7 +405,8 @@ class WebSocketClientTest {
                 simulateWebSocketClosed(1006, "Abnormal closure")
                 advanceUntilIdle()
 
-                while (awaitItem() != ConnectionState.Disconnected) {}
+                while (awaitItem() != ConnectionState.Disconnected) {
+                }
 
                 val rec = awaitItem()
                 require(rec is ConnectionState.Reconnecting)

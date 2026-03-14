@@ -88,7 +88,11 @@ class TickerStreamRepositoryImpl
             webSocketClient.disconnect()
         }
 
-        override fun subscribe(ticker: String): Boolean = webSocketClient.subscribe(ticker)
+        override fun subscribe(ticker: String) {
+            webSocketClient.subscribe(ticker)
+        }
 
-        override fun unsubscribe(ticker: String): Boolean = webSocketClient.unsubscribe(ticker)
+        override fun unsubscribe(ticker: String) {
+            webSocketClient.unsubscribe(ticker)
+        }
     }

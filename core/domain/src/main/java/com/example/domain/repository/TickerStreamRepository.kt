@@ -12,7 +12,7 @@ interface TickerStreamRepository {
 
     fun disconnect()
 
-    fun subscribe(ticker: String): Boolean
+    fun subscribe(ticker: String)
 
-    fun unsubscribe(ticker: String): Boolean
+    fun unsubscribe(ticker: String)
 }

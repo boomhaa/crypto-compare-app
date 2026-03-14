@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.ui.unit)
     ksp(libs.hilt.compiler)
 
     testImplementation(project(":core:testing"))

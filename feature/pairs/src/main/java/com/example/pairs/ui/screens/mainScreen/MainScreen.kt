@@ -3,6 +3,7 @@ package com.example.pairs.ui.screens.mainScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,27 +20,52 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.helpers.util.Constants
 import com.example.pairs.ui.screens.mainScreen.components.ListHeader
 import com.example.pairs.ui.screens.mainScreen.components.PairRow
 import com.example.pairs.viewmodel.mainViewModel.MainViewModel
 import com.example.ui.theme.Dimensions
 import com.example.ui.theme.bgPrimary
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
-    val focusManages = LocalFocusManager.current
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+    val focusManager = LocalFocusManager.current
+
     val filteredPairs =
-        uiState.pairs.filter { pair ->
-            pair.ticker.contains(uiState.searchQuery.trim(), ignoreCase = true)
+        uiState.value.pairs.filter { pair ->
+            pair.ticker.contains(uiState.value.searchQuery.trim(), ignoreCase = true)
         }
+
+    val lazyList = rememberLazyListState()
+
+    LaunchedEffect(lazyList, viewModel, filteredPairs) {
+        snapshotFlow {
+            val firstVisibleIndex = lazyList.firstVisibleItemIndex
+            filteredPairs
+                .drop(firstVisibleIndex)
+                .take(Constants.MAX_TICKERS_ON_SCREEN)
+                .map { it.ticker }
+        }.distinctUntilChanged()
+            .collect(viewModel::onVisibleTickersChange)
+    }
+
+    LaunchedEffect(uiState.value.error, uiState.value.loading) {
+        if (uiState.value.loading || uiState.value.error != null) {
+            viewModel.onVisibleTickersChange(emptyList())
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -62,12 +89,12 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                     .padding(horizontal = Dimensions.Padding.screenHorizontal)
                     .padding(vertical = Dimensions.Padding.screenVertical)
                     .pointerInput(Unit) {
-                        detectTapGestures { focusManages.clearFocus() }
+                        detectTapGestures { focusManager.clearFocus() }
                     },
             verticalArrangement = Arrangement.spacedBy(Dimensions.Gap.md),
         ) {
             OutlinedTextField(
-                value = uiState.searchQuery,
+                value = uiState.value.searchQuery,
                 onValueChange = viewModel::onSearchQueryChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -75,7 +102,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
             )
 
             when {
-                uiState.loading -> {
+                uiState.value.loading -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
@@ -84,9 +111,9 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                     }
                 }
 
-                uiState.error != null -> {
+                uiState.value.error != null -> {
                     Text(
-                        text = "Error: ${uiState.error}",
+                        text = "Error: ${uiState.value.error}",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -95,12 +122,23 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                 else -> {
                     ListHeader()
 
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(Dimensions.Gap.sm),
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-                        items(filteredPairs, key = { it.ticker }) { pair ->
-                            PairRow(pair)
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        val rowSpacing = Dimensions.Gap.sm
+                        val totalSpacing = rowSpacing * (Constants.MAX_TICKERS_ON_SCREEN - 1)
+                        val calculatedRowHeight =
+                            ((maxHeight - totalSpacing) / Constants.MAX_TICKERS_ON_SCREEN).coerceAtLeast(40.dp)
+
+                        LazyColumn(
+                            state = lazyList,
+                            verticalArrangement = Arrangement.spacedBy(rowSpacing),
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            items(filteredPairs, key = { it.ticker }) { pair ->
+                                PairRow(
+                                    pair = pair,
+                                    rowHeight = calculatedRowHeight,
+                                )
+                            }
                         }
                     }
                 }
