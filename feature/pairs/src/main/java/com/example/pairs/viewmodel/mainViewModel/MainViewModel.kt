@@ -93,28 +93,7 @@ class MainViewModel
                 tickerStreamRepository.event.collect { event ->
                     if (event is TickerStreamEvent.TickerPriceChange) {
                         val symbolId = event.data.symbolId.toLong()
-
-                        Log.d(
-                            "SocketDebug",
-                            "incoming: ticker=${event.data.ticker}, symbolId=$symbolId, " +
-                                "buy=${event.data.priceBuy}, sell=${event.data.priceSell}",
-                        )
-
-                        val currentSymbol = symbolsById[symbolId]
-
-                        if (currentSymbol == null) {
-                            Log.w(
-                                "Socket",
-                                "Unknown symbolId=$symbolId, ticker=${event.data.ticker}, providerId=${event.data.providerId}",
-                            )
-                            return@collect
-                        }
-
-                        Log.d(
-                            "SocketDebug",
-                            "before update: id=${currentSymbol.id}, ticker=${currentSymbol.ticker}, " +
-                                "providerId=${currentSymbol.providerId}, buy=${currentSymbol.priceBuy}, sell=${currentSymbol.priceSell}",
-                        )
+                        val currentSymbol = symbolsById[symbolId] ?: return@collect
 
                         val updatedSymbol =
                             currentSymbol.copy(

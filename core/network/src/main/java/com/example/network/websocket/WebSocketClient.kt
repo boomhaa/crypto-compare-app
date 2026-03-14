@@ -257,7 +257,6 @@ class WebSocketClient
                                 )
                             }.getOrNull()
                                 ?: return
-                        Log.d("WebSocketClient", rawMessage)
                         SocketDtoMessage.SymbolPriceChange(parsedMessage.id, data = data)
                     }
 
