@@ -27,6 +27,12 @@ interface CryptoCompareApi {
         @Query("rows") rows: Int? = null,
     ): GetSymbolsResponse
 
+    @GET("symbols")
+    suspend fun getSymbols(
+        @Query("skip") skip: Int? = null,
+        @Query("rows") rows: Int? = null,
+    ): GetSymbolsResponse
+
     @GET("symbols/{id}")
     suspend fun getSymbol(
         @Path("id") id: Long,

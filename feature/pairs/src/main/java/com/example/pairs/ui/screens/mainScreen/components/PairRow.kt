@@ -4,6 +4,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import com.example.helpers.toPriceString
 import com.example.model.PairUiItem
 import com.example.ui.theme.Dimensions
@@ -21,10 +23,20 @@ import com.example.ui.theme.borderPrimary
 import com.example.ui.theme.textSecondary
 
 @Composable
-fun PairRow(pair: PairUiItem) {
+fun PairRow(
+    pair: PairUiItem,
+    modifier: Modifier = Modifier,
+    rowHeight: Dp? = null,
+) {
+    val rowModifier =
+        if (rowHeight != null) {
+            modifier.height(rowHeight)
+        } else {
+            modifier
+        }
     Surface(
         modifier =
-            Modifier
+            rowModifier
                 .fillMaxWidth()
                 .border(
                     width = Dimensions.Border.card,

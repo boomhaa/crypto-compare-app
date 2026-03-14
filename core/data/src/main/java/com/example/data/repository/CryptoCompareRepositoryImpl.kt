@@ -2,10 +2,13 @@ package com.example.data.repository
 
 import com.example.data.mapper.toDomain
 import com.example.domain.repository.CryptoCompareRepository
+import com.example.helpers.util.Constants
 import com.example.model.Provider
 import com.example.model.Symbol
 import com.example.network.api.CryptoCompareApi
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.collections.orEmpty
@@ -31,30 +34,23 @@ class CryptoCompareRepositoryImpl
                 Result.failure(e)
             }
 
-        override suspend fun getSymbols(): Result<List<Symbol>> {
-            return try {
-                val providersResponse = cryptoCompareApi.getProviders()
+        override suspend fun getSymbols(): Flow<List<Symbol>> =
+            flow {
+                var skip = 0
 
-                if (providersResponse.errorCode != 0) {
-                    val message = providersResponse.errorMsgs?.joinToString("\n") ?: "Unknown error"
-                    return Result.failure(Exception(message))
-                }
+                while (true) {
+                    val response = cryptoCompareApi.getSymbols(skip = skip, rows = Constants.SYMBOLS_IN_ROW)
 
-                val allSymbols =
-                    providersResponse.providers.orEmpty().flatMap { provider ->
-                        val symbolsResponse = cryptoCompareApi.getSymbolsByProvider(providerId = provider.id)
-                        if (symbolsResponse.errorCode != 0) {
-                            val message = symbolsResponse.errorMsgs?.joinToString("\n") ?: "Unknown error"
-                            throw IllegalStateException(message)
-                        }
-                        symbolsResponse.symbols.orEmpty().toDomain()
+                    if (response.errorCode != 0) {
+                        val message = response.errorMsgs?.joinToString("\n") ?: "Unknown error"
+                        throw IllegalStateException(message)
                     }
 
-                Result.success(allSymbols)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Result.failure(e)
+                    val symbols = response.symbols.orEmpty()
+                    if (symbols.isEmpty()) break
+
+                    emit(symbols.toDomain())
+                    skip += Constants.SYMBOLS_IN_ROW
+                }
             }
-        }
     }

@@ -1,5 +1,6 @@
 package com.example.data.repository
 
+import android.util.Log
 import com.example.domain.repository.TickerStreamRepository
 import com.example.model.TickerConnectionState
 import com.example.model.TickerPrice
@@ -88,7 +89,13 @@ class TickerStreamRepositoryImpl
             webSocketClient.disconnect()
         }
 
-        override fun subscribe(ticker: String): Boolean = webSocketClient.subscribe(ticker)
+        override fun subscribe(ticker: String) {
+            webSocketClient.subscribe(ticker)
+            Log.d("TickerStreamRepository", "subscribe requested for $ticker")
+        }
 
-        override fun unsubscribe(ticker: String): Boolean = webSocketClient.unsubscribe(ticker)
+        override fun unsubscribe(ticker: String) {
+            webSocketClient.unsubscribe(ticker)
+            Log.d("TickerStreamRepository", "unsubscribe requested for $ticker")
+        }
     }

@@ -1,5 +1,6 @@
 package com.example.network.websocket
 
+import android.util.Log
 import com.example.helpers.util.Constants
 import com.example.network.dto.webSocketDTO.SocketDtoMessage
 import com.example.network.dto.webSocketDTO.SocketInboundRawMessage
@@ -118,7 +119,7 @@ class WebSocketClient
                 }
         }
 
-        fun subscribe(ticker: String): Boolean {
+        fun subscribe(ticker: String) {
             val tickerLower = ticker.lowercase()
 
             val wasAdded =
@@ -126,10 +127,12 @@ class WebSocketClient
                     subscribedTickers.add(tickerLower)
                 }
 
-            return if (wasAdded) sendMessage(MessageType.SUBSCRIBE, tickerLower) else false
+            if (wasAdded && _connectionState.value == ConnectionState.Connected) {
+                sendMessage(MessageType.SUBSCRIBE, tickerLower)
+            }
         }
 
-        fun unsubscribe(ticker: String): Boolean {
+        fun unsubscribe(ticker: String) {
             val tickerLower = ticker.lowercase()
 
             val wasRemoved =
@@ -137,7 +140,9 @@ class WebSocketClient
                     subscribedTickers.remove(tickerLower)
                 }
 
-            return if (wasRemoved) sendMessage(MessageType.UNSUBSCRIBE, tickerLower) else false
+            if (wasRemoved && _connectionState.value == ConnectionState.Connected) {
+                sendMessage(MessageType.UNSUBSCRIBE, tickerLower)
+            }
         }
 
         private fun webSocketListener(): WebSocketListener =
@@ -252,6 +257,7 @@ class WebSocketClient
                                 )
                             }.getOrNull()
                                 ?: return
+                        Log.d("WebSocketClient", rawMessage)
                         SocketDtoMessage.SymbolPriceChange(parsedMessage.id, data = data)
                     }
 

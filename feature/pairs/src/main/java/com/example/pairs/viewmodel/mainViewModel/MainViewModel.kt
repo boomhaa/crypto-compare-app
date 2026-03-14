@@ -1,7 +1,9 @@
 package com.example.pairs.viewmodel.mainViewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.mapper.toPairItemByTicker
 import com.example.data.mapper.toPairItems
 import com.example.domain.repository.CryptoCompareRepository
 import com.example.domain.repository.TickerStreamRepository
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class MainViewModel
@@ -25,6 +28,7 @@ class MainViewModel
         val uiState = _uiState.asStateFlow()
 
         private val symbolsById = mutableMapOf<Long, Symbol>()
+        private val subscribedTickers = mutableSetOf<String>()
 
         init {
             observeSocket()
@@ -33,34 +37,27 @@ class MainViewModel
 
         fun loadPairs() {
             _uiState.update { it.copy(error = null, loading = true) }
-
             viewModelScope.launch {
-                cryptoCompareRepository
-                    .getSymbols()
-                    .onSuccess { symbols ->
-                        symbolsById.clear()
-                        symbols.forEach { symbolsById[it.id] = it }
+                try {
+                    tickerStreamRepository.connect()
 
-                        _uiState.update {
-                            it.copy(
+                    cryptoCompareRepository.getSymbols().collect { page ->
+                        page.forEach { symbol ->
+                            symbolsById[symbol.id] = symbol
+                        }
+                        _uiState.update { state ->
+                            state.copy(
                                 pairs = symbolsById.values.toPairItems(),
                                 loading = false,
                                 error = null,
                             )
                         }
-
-                        tickerStreamRepository.connect()
-                        symbolsById.values.mapNotNull { it.ticker?.lowercase() }.toSet().forEach { ticker ->
-                            tickerStreamRepository.subscribe(ticker)
-                        }
-                    }.onFailure { exception ->
-                        _uiState.update {
-                            it.copy(
-                                loading = false,
-                                error = exception.message ?: "Error",
-                            )
-                        }
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(loading = false, error = e.message ?: "Error") }
+                }
             }
         }
 
@@ -68,41 +65,103 @@ class MainViewModel
             _uiState.update { it.copy(searchQuery = query) }
         }
 
+        fun onVisibleTickersChange(visibleTickers: List<String>) {
+            val normalizedVisibleTickers =
+                visibleTickers
+                    .map { it.lowercase() }
+                    .filter { it.isNotBlank() }
+                    .toSet()
+
+            val toUnsubscribe = subscribedTickers - normalizedVisibleTickers
+            val toSubscribe = normalizedVisibleTickers - subscribedTickers
+
+            toUnsubscribe.forEach { ticker ->
+                tickerStreamRepository.unsubscribe(ticker)
+                subscribedTickers.remove(ticker)
+            }
+
+            toSubscribe.forEach { ticker ->
+                tickerStreamRepository.subscribe(ticker)
+                subscribedTickers.add(ticker)
+            }
+
+            _uiState.update { it.copy(subscribedTickers = subscribedTickers.toSet()) }
+        }
+
         private fun observeSocket() {
             viewModelScope.launch {
                 tickerStreamRepository.event.collect { event ->
                     if (event is TickerStreamEvent.TickerPriceChange) {
                         val symbolId = event.data.symbolId.toLong()
-                        val byId = symbolsById[symbolId]
-                        when {
-                            byId != null -> {
-                                symbolsById[symbolId] =
-                                    byId.copy(
-                                        priceSell = event.data.priceSell,
-                                        priceBuy = event.data.priceBuy,
-                                    )
-                            }
 
-                            else -> {
-                                val keyByProviderAndTicker =
-                                    symbolsById.entries
-                                        .firstOrNull { (_, symbol) ->
-                                            symbol.providerId == event.data.providerId &&
-                                                symbol.ticker.equals(event.data.ticker, ignoreCase = true)
-                                        }?.key
-                                        ?: return@collect
+                        Log.d(
+                            "SocketDebug",
+                            "incoming: ticker=${event.data.ticker}, symbolId=$symbolId, " +
+                                "buy=${event.data.priceBuy}, sell=${event.data.priceSell}",
+                        )
 
-                                val current = symbolsById[keyByProviderAndTicker] ?: return@collect
-                                symbolsById[keyByProviderAndTicker] =
-                                    current.copy(
-                                        priceSell = event.data.priceSell,
-                                        priceBuy = event.data.priceBuy,
-                                    )
-                            }
+                        val currentSymbol = symbolsById[symbolId]
+
+                        if (currentSymbol == null) {
+                            Log.w(
+                                "Socket",
+                                "Unknown symbolId=$symbolId, ticker=${event.data.ticker}, providerId=${event.data.providerId}",
+                            )
+                            return@collect
                         }
 
+                        Log.d(
+                            "SocketDebug",
+                            "before update: id=${currentSymbol.id}, ticker=${currentSymbol.ticker}, " +
+                                "providerId=${currentSymbol.providerId}, buy=${currentSymbol.priceBuy}, sell=${currentSymbol.priceSell}",
+                        )
+
+                        val updatedSymbol =
+                            currentSymbol.copy(
+                                priceBuy = event.data.priceBuy,
+                                priceSell = event.data.priceSell,
+                            )
+
+                        symbolsById[symbolId] = updatedSymbol
+
+                        val normalizedTicker = updatedSymbol.ticker?.uppercase().orEmpty()
+                        if (normalizedTicker.isEmpty()) return@collect
+
+                        val sameTickerSymbols =
+                            symbolsById.values.filter {
+                                it.ticker?.uppercase().orEmpty() == normalizedTicker
+                            }
+
+                        Log.d(
+                            "SocketDebug",
+                            "sameTickerSymbols for $normalizedTicker = ${
+                                sameTickerSymbols.joinToString {
+                                    "[id=${it.id}, provider=${it.providerId}, buy=${it.priceBuy}, sell=${it.priceSell}]"
+                                }
+                            }",
+                        )
+
+                        val updatedItem =
+                            symbolsById.values.toPairItemByTicker(normalizedTicker)
+                                ?: return@collect
+
+                        Log.d("SocketDebug", "updatedItem=$updatedItem")
+
                         _uiState.update { state ->
-                            state.copy(pairs = symbolsById.values.toPairItems())
+                            val currentPairs = state.pairs.toMutableList()
+                            val index = currentPairs.indexOfFirst { it.ticker == normalizedTicker }
+
+                            Log.d(
+                                "SocketDebug",
+                                "pair index for $normalizedTicker = $index, currentUiSize=${currentPairs.size}",
+                            )
+
+                            if (index == -1) {
+                                state
+                            } else {
+                                currentPairs[index] = updatedItem
+                                state.copy(pairs = currentPairs)
+                            }
                         }
                     }
                 }
