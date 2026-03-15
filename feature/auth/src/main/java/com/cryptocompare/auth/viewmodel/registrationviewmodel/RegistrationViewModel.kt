@@ -24,7 +24,14 @@ class RegistrationViewModel
         }
 
         fun onPasswordChange(password: String) {
-            _uiState.update { uiState -> uiState.copy(password = password) }
+            _uiState.update { uiState ->
+                uiState.copy(
+                    password = password,
+                    passwordLengthMet = password.length >= 6,
+                    passwordLetterMet = password.any { it.isLetter() },
+                    passwordNumberMet = password.any { it.isDigit() },
+                )
+            }
         }
 
         fun onConfirmPasswordChange(confirmPassword: String) {

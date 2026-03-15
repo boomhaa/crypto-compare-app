@@ -66,7 +66,7 @@ fun AuthTextField(
             if (isPassword) {
                 {
                     val icon: ImageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    IconButton(onClick = { !passwordVisible }) {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
