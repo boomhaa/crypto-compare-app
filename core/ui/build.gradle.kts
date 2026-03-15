@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ui"
+    namespace = "com.cryptocompare.ui"
     compileSdk {
         version = release(36)
     }

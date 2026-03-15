@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.auth"
+    namespace = "com.cryptocompare.helpers"
     compileSdk {
         version = release(36)
     }

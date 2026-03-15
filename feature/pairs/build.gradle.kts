@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pairs"
+    namespace = "com.cryptocompare.pairs"
     compileSdk {
         version = release(36)
     }

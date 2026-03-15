@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.model"
+    namespace = "com.cryptocompare.model"
     compileSdk {
         version = release(36)
     }

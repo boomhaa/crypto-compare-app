@@ -11,13 +11,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.cryptocompare"
+    namespace = "com.cryptocompare.app"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.cryptocompare"
+        applicationId = "com.cryptocompare.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

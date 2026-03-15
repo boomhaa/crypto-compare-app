@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.network"
+    namespace = "com.cryptocompare.network"
     compileSdk {
         version = release(36)
     }
