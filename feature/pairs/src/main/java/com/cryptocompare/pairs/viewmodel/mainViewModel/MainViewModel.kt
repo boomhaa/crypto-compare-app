@@ -2,10 +2,11 @@ package com.cryptocompare.pairs.viewmodel.mainViewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cryptocompare.data.mapper.toPairItemByTicker
-import com.cryptocompare.data.mapper.toPairItems
-import com.cryptocompare.domain.repository.CryptoCompareRepository
-import com.cryptocompare.domain.repository.TickerStreamRepository
+import com.cryptocompare.domain.usecase.pairs.ApplyTickerPriceChangesUseCase
+import com.cryptocompare.domain.usecase.pairs.LoadPairsUseCase
+import com.cryptocompare.domain.usecase.pairs.ObserveTickerEventUseCase
+import com.cryptocompare.domain.usecase.pairs.StreamDisconnectUseCase
+import com.cryptocompare.domain.usecase.pairs.SyncVisibleTickersUseCase
 import com.cryptocompare.model.Symbol
 import com.cryptocompare.model.TickerStreamEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,8 +21,11 @@ import kotlin.coroutines.cancellation.CancellationException
 class MainViewModel
     @Inject
     constructor(
-        private val cryptoCompareRepository: CryptoCompareRepository,
-        private val tickerStreamRepository: TickerStreamRepository,
+        private val loadPairsUseCase: LoadPairsUseCase,
+        private val syncVisibleTickersUseCase: SyncVisibleTickersUseCase,
+        private val streamDisconnectUseCase: StreamDisconnectUseCase,
+        private val observeTickerEventUseCase: ObserveTickerEventUseCase,
+        private val applyTickerPriceChangesUseCase: ApplyTickerPriceChangesUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(MainUiState())
         val uiState = _uiState.asStateFlow()
@@ -38,15 +42,10 @@ class MainViewModel
             _uiState.update { it.copy(error = null, loading = true) }
             viewModelScope.launch {
                 try {
-                    tickerStreamRepository.connect()
-
-                    cryptoCompareRepository.getSymbols().collect { page ->
-                        page.forEach { symbol ->
-                            symbolsById[symbol.id] = symbol
-                        }
+                    loadPairsUseCase(symbolsById).collect { symbols ->
                         _uiState.update { state ->
                             state.copy(
-                                pairs = symbolsById.values.toPairItems(),
+                                pairs = symbols,
                                 loading = false,
                                 error = null,
                             )
@@ -65,60 +64,26 @@ class MainViewModel
         }
 
         fun onVisibleTickersChange(visibleTickers: List<String>) {
-            val normalizedVisibleTickers =
-                visibleTickers
-                    .map { it.lowercase() }
-                    .filter { it.isNotBlank() }
-                    .toSet()
+            val updatedSubscribedTickers = syncVisibleTickersUseCase(visibleTickers, subscribedTickers)
 
-            val toUnsubscribe = subscribedTickers - normalizedVisibleTickers
-            val toSubscribe = normalizedVisibleTickers - subscribedTickers
+            subscribedTickers.clear()
+            subscribedTickers.addAll(updatedSubscribedTickers)
 
-            toUnsubscribe.forEach { ticker ->
-                tickerStreamRepository.unsubscribe(ticker)
-                subscribedTickers.remove(ticker)
-            }
-
-            toSubscribe.forEach { ticker ->
-                tickerStreamRepository.subscribe(ticker)
-                subscribedTickers.add(ticker)
-            }
-
-            _uiState.update { it.copy(subscribedTickers = subscribedTickers.toSet()) }
+            _uiState.update { it.copy(subscribedTickers = updatedSubscribedTickers) }
         }
 
         private fun observeSocket() {
             viewModelScope.launch {
-                tickerStreamRepository.event.collect { event ->
+                observeTickerEventUseCase().collect { event ->
                     if (event is TickerStreamEvent.TickerPriceChange) {
-                        val symbolId = event.data.symbolId.toLong()
-                        val currentSymbol = symbolsById[symbolId] ?: return@collect
-
-                        val updatedSymbol =
-                            currentSymbol.copy(
-                                priceBuy = event.data.priceBuy,
-                                priceSell = event.data.priceSell,
-                            )
-
-                        symbolsById[symbolId] = updatedSymbol
-
-                        val normalizedTicker = updatedSymbol.ticker?.uppercase().orEmpty()
-                        if (normalizedTicker.isEmpty()) return@collect
-
-                        val updatedItem =
-                            symbolsById.values.toPairItemByTicker(normalizedTicker)
-                                ?: return@collect
-
                         _uiState.update { state ->
-                            val currentPairs = state.pairs.toMutableList()
-                            val index = currentPairs.indexOfFirst { it.ticker == normalizedTicker }
-
-                            if (index == -1) {
-                                state
-                            } else {
-                                currentPairs[index] = updatedItem
-                                state.copy(pairs = currentPairs)
-                            }
+                            val updatedPairs =
+                                applyTickerPriceChangesUseCase(
+                                    event = event,
+                                    symbolsById = symbolsById,
+                                    currentPairs = state.pairs.toMutableList(),
+                                )
+                            state.copy(pairs = updatedPairs)
                         }
                     }
                 }
@@ -126,7 +91,7 @@ class MainViewModel
         }
 
         override fun onCleared() {
-            tickerStreamRepository.disconnect()
+            streamDisconnectUseCase()
             super.onCleared()
         }
     }
