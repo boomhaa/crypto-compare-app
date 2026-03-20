@@ -16,6 +16,7 @@ class ApplyTickerPriceChangesUseCase
         ): MutableList<PairUiItem> {
             val symbolId = event.data.symbolId.toLong()
             val currentSymbol = symbolsById[symbolId] ?: return currentPairs
+
             val updatedSymbol =
                 currentSymbol.copy(
                     priceBuy = event.data.priceBuy,
