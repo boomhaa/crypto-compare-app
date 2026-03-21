@@ -2,7 +2,9 @@ package com.cryptocompare.auth.viewmodel.registrationviewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cryptocompare.domain.repository.AuthRepository
+import com.cryptocompare.domain.usecase.auth.IsValidEmailUseCase
+import com.cryptocompare.domain.usecase.auth.SignInWithGoogleUseCase
+import com.cryptocompare.domain.usecase.auth.SignUpWithEmailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +16,9 @@ import javax.inject.Inject
 class RegistrationViewModel
     @Inject
     constructor(
-        private val authRepository: AuthRepository,
+        private val isValidEmailUseCase: IsValidEmailUseCase,
+        private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
+        private val signUpWithEmailUseCase: SignUpWithEmailUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(RegistrationUiState())
         val uiState = _uiState.asStateFlow()
@@ -43,12 +47,15 @@ class RegistrationViewModel
             val password = _uiState.value.password
             val confirmPassword = _uiState.value.confirmPassword
 
-            if (!isValidEmail(email)) {
+            if (!isValidEmailUseCase(email)) {
                 _uiState.update { uiState -> uiState.copy(errorMessage = "Incorrect email was entered") }
                 return
             }
 
-            if (password.length < 6 || !password.any { it.isLetter() } || !password.any { it.isDigit() }) {
+            if (!_uiState.value.passwordLengthMet ||
+                !_uiState.value.passwordLetterMet ||
+                !_uiState.value.passwordNumberMet
+            ) {
                 _uiState.update { it.copy(errorMessage = "Password must be stronger") }
                 return
             }
@@ -60,8 +67,7 @@ class RegistrationViewModel
             _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
 
             viewModelScope.launch {
-                authRepository
-                    .signUpWithEmail(email, password)
+                signUpWithEmailUseCase(email, password)
                     .onSuccess {
                         _uiState.update { uiState ->
                             uiState.copy(isLoading = false, isAuthenticated = true)
@@ -86,8 +92,7 @@ class RegistrationViewModel
             _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
 
             viewModelScope.launch {
-                authRepository
-                    .signInWithGoogle(idToken)
+                signInWithGoogleUseCase(idToken)
                     .onSuccess {
                         _uiState.update { uiState ->
                             uiState.copy(isLoading = false, isAuthenticated = true)
@@ -105,11 +110,5 @@ class RegistrationViewModel
 
         fun onGoogleError(message: String) {
             _uiState.update { it.copy(errorMessage = message) }
-        }
-
-        private fun isValidEmail(email: String): Boolean = email.isNotBlank() && EMAIL_REGEX.matches(email)
-
-        private companion object {
-            val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
         }
     }

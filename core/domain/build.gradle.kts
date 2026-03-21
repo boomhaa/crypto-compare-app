@@ -41,6 +41,7 @@ kotlin {
 dependencies {
     // modules
     api(project(":core:model"))
+    api(project(":core:helpers"))
 
     // coroutines
     implementation(libs.coroutines.core)

@@ -2,7 +2,9 @@ package com.cryptocompare.auth.viewmodel.loginviewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cryptocompare.domain.repository.AuthRepository
+import com.cryptocompare.domain.usecase.auth.IsValidEmailUseCase
+import com.cryptocompare.domain.usecase.auth.SignInWithEmailUseCase
+import com.cryptocompare.domain.usecase.auth.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +16,9 @@ import javax.inject.Inject
 class LoginViewModel
     @Inject
     constructor(
-        private val authRepository: AuthRepository,
+        private val signInWithEmailUseCase: SignInWithEmailUseCase,
+        private val isValidEmailUseCase: IsValidEmailUseCase,
+        private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(LoginUiState())
         val uiState = _uiState.asStateFlow()
@@ -31,7 +35,7 @@ class LoginViewModel
             val email = _uiState.value.email.trim()
             val password = _uiState.value.password
 
-            if (!isValidEmail(email)) {
+            if (!isValidEmailUseCase(email)) {
                 _uiState.update { uiState -> uiState.copy(errorMessage = "Incorrect email was entered") }
                 return
             }
@@ -44,8 +48,7 @@ class LoginViewModel
             _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
 
             viewModelScope.launch {
-                authRepository
-                    .signInWithEmail(email, password)
+                signInWithEmailUseCase(email, password)
                     .onSuccess {
                         _uiState.update { uiState ->
                             uiState.copy(isLoading = false, isAuthenticated = true)
@@ -70,8 +73,7 @@ class LoginViewModel
             _uiState.update { uiState -> uiState.copy(isLoading = true, errorMessage = null) }
 
             viewModelScope.launch {
-                authRepository
-                    .signInWithGoogle(idToken)
+                signInWithGoogleUseCase(idToken)
                     .onSuccess {
                         _uiState.update { uiState ->
                             uiState.copy(isLoading = false, isAuthenticated = true)
@@ -89,11 +91,5 @@ class LoginViewModel
 
         fun onGoogleError(message: String) {
             _uiState.update { it.copy(errorMessage = message) }
-        }
-
-        private fun isValidEmail(email: String): Boolean = email.isNotBlank() && EMAIL_REGEX.matches(email)
-
-        private companion object {
-            val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
         }
     }
