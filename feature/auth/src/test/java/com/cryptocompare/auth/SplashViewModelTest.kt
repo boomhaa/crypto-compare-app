@@ -2,6 +2,7 @@ package com.cryptocompare.auth
 
 import com.cryptocompare.auth.viewmodel.splashviewmodel.SplashViewModel
 import com.cryptocompare.domain.repository.AuthRepository
+import com.cryptocompare.domain.usecase.auth.GetCurrentUserUseCase
 import com.cryptocompare.helpers.util.Constants.SPLASH_DURATION_MS
 import com.cryptocompare.model.AuthUser
 import com.cryptocompare.testing.MainDispatcherRule
@@ -26,6 +27,7 @@ class SplashViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val authRepository: AuthRepository = mockk(relaxed = true)
+    private val getCurrentUserUseCase = GetCurrentUserUseCase(authRepository)
 
     @Before
     fun setUp() {
@@ -35,9 +37,9 @@ class SplashViewModelTest {
     @Test
     fun `init with authorized user sets authenticated true after splash delay`() =
         runTest {
-            every { authRepository.currentUser } returns TEST_USER
+            every { getCurrentUserUseCase() } returns TEST_USER
 
-            val viewModel = SplashViewModel(authRepository)
+            val viewModel = createViewModel()
 
             assertTrue(viewModel.uiState.value.isCheckAuth)
 
@@ -52,9 +54,9 @@ class SplashViewModelTest {
     @Test
     fun `init with no user sets authenticated false after splash delay`() =
         runTest {
-            every { authRepository.currentUser } returns null
+            every { getCurrentUserUseCase() } returns null
 
-            val viewModel = SplashViewModel(authRepository)
+            val viewModel = createViewModel()
 
             advanceTimeBy(SPLASH_DURATION_MS)
             runCurrent()
@@ -67,9 +69,9 @@ class SplashViewModelTest {
     @Test
     fun `init auth check failure exposes error and unauthenticated state`() =
         runTest {
-            every { authRepository.currentUser } throws IllegalStateException("network down")
+            every { getCurrentUserUseCase() } throws IllegalStateException("network down")
 
-            val viewModel = SplashViewModel(authRepository)
+            val viewModel = createViewModel()
 
             advanceTimeBy(SPLASH_DURATION_MS)
             runCurrent()
@@ -82,9 +84,9 @@ class SplashViewModelTest {
     @Test
     fun `retry after failure succeeds and clears error`() =
         runTest {
-            every { authRepository.currentUser } throws IllegalStateException("network down") andThen TEST_USER
+            every { getCurrentUserUseCase() } throws IllegalStateException("network down") andThen TEST_USER
 
-            val viewModel = SplashViewModel(authRepository)
+            val viewModel = createViewModel()
 
             advanceTimeBy(SPLASH_DURATION_MS)
             runCurrent()
@@ -99,6 +101,8 @@ class SplashViewModelTest {
             assertEquals(true, viewModel.uiState.value.isAuthenticated)
             assertNull(viewModel.uiState.value.errorMessage)
         }
+
+    private fun createViewModel(): SplashViewModel = SplashViewModel(getCurrentUserUseCase)
 
     private companion object {
         val TEST_USER =
