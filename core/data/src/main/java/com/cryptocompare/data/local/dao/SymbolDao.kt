@@ -20,8 +20,8 @@ interface SymbolDao {
     @Query("DELETE FROM symbols WHERE id NOT IN (:ids)")
     suspend fun deleteAllExcept(ids: List<Long>)
 
-    suspend fun syncSymbols(symbols: List<SymbolEntity>){
-        if (symbols.isEmpty()){
+    suspend fun syncSymbols(symbols: List<SymbolEntity>) {
+        if (symbols.isEmpty()) {
             deleteAll()
             return
         }

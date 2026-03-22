@@ -12,8 +12,8 @@ import androidx.room.PrimaryKey
             entity = ProviderEntity::class,
             parentColumns = ["id"],
             childColumns = ["providerId"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [Index(value = ["providerId"])],
 )
