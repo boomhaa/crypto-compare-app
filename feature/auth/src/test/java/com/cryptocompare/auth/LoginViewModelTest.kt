@@ -2,6 +2,9 @@ package com.cryptocompare.auth
 
 import com.cryptocompare.auth.viewmodel.loginviewmodel.LoginViewModel
 import com.cryptocompare.domain.repository.AuthRepository
+import com.cryptocompare.domain.usecase.auth.IsValidEmailUseCase
+import com.cryptocompare.domain.usecase.auth.SignInWithEmailUseCase
+import com.cryptocompare.domain.usecase.auth.SignInWithGoogleUseCase
 import com.cryptocompare.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -21,11 +24,14 @@ class LoginViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val authRepository: AuthRepository = mockk(relaxed = true)
+    private val isValidEmailUseCase = IsValidEmailUseCase()
+    private val signInWithEmailUseCase = SignInWithEmailUseCase(authRepository)
+    private val signInWithGoogleUseCase = SignInWithGoogleUseCase(authRepository)
 
     @Test
     fun `signIn with invalid email sets error`() =
         runTest {
-            val viewModel = LoginViewModel(authRepository)
+            val viewModel = createViewModel()
 
             viewModel.onEmailChange("bad")
             viewModel.onPasswordChange("secret123")
@@ -33,13 +39,13 @@ class LoginViewModelTest {
             viewModel.signInWithEmail()
 
             assertEquals("Incorrect email was entered", viewModel.uiState.value.errorMessage)
-            coVerify(exactly = 0) { authRepository.signInWithEmail(any(), any()) }
+            coVerify(exactly = 0) { signInWithEmailUseCase(any(), any()) }
         }
 
     @Test
     fun `signIn with short password sets error`() =
         runTest {
-            val viewModel = LoginViewModel(authRepository)
+            val viewModel = createViewModel()
 
             viewModel.onEmailChange("user@example.com")
             viewModel.onPasswordChange("123")
@@ -47,14 +53,14 @@ class LoginViewModelTest {
             viewModel.signInWithEmail()
 
             assertEquals("Password must have more than 6 symbols", viewModel.uiState.value.errorMessage)
-            coVerify(exactly = 0) { authRepository.signInWithEmail(any(), any()) }
+            coVerify(exactly = 0) { signInWithEmailUseCase(any(), any()) }
         }
 
     @Test
     fun `signIn success clears loading`() =
         runTest {
-            coEvery { authRepository.signInWithEmail(any(), any()) } returns Result.success(mockk())
-            val viewModel = LoginViewModel(authRepository)
+            coEvery { signInWithEmailUseCase(any(), any()) } returns Result.success(mockk())
+            val viewModel = createViewModel()
 
             viewModel.onEmailChange("user@example.com")
             viewModel.onPasswordChange("secret123")
@@ -71,9 +77,9 @@ class LoginViewModelTest {
     @Test
     fun `signIn failure sets error`() =
         runTest {
-            coEvery { authRepository.signInWithEmail(any(), any()) } returns
+            coEvery { signInWithEmailUseCase(any(), any()) } returns
                 Result.failure(IllegalStateException("fail"))
-            val viewModel = LoginViewModel(authRepository)
+            val viewModel = createViewModel()
 
             viewModel.onEmailChange("user@example.com")
             viewModel.onPasswordChange("secret123")
@@ -88,19 +94,19 @@ class LoginViewModelTest {
     @Test
     fun `signInWithGoogle blank token sets error`() =
         runTest {
-            val viewModel = LoginViewModel(authRepository)
+            val viewModel = createViewModel()
 
             viewModel.signInWithGoogle("")
 
             assertEquals("Google token not found", viewModel.uiState.value.errorMessage)
-            coVerify(exactly = 0) { authRepository.signInWithGoogle(any()) }
+            coVerify(exactly = 0) { signInWithGoogleUseCase(any()) }
         }
 
     @Test
     fun `signInWithGoogle success clears loading`() =
         runTest {
-            coEvery { authRepository.signInWithGoogle(any()) } returns Result.success(mockk())
-            val viewModel = LoginViewModel(authRepository)
+            coEvery { signInWithGoogleUseCase(any()) } returns Result.success(mockk())
+            val viewModel = createViewModel()
 
             viewModel.signInWithGoogle("token")
             assertEquals(true, viewModel.uiState.value.isLoading)
@@ -110,4 +116,11 @@ class LoginViewModelTest {
             assertFalse(viewModel.uiState.value.isLoading)
             assertNull(viewModel.uiState.value.errorMessage)
         }
+
+    private fun createViewModel(): LoginViewModel =
+        LoginViewModel(
+            isValidEmailUseCase = isValidEmailUseCase,
+            signInWithEmailUseCase = signInWithEmailUseCase,
+            signInWithGoogleUseCase = signInWithGoogleUseCase,
+        )
 }

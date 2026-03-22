@@ -14,4 +14,8 @@ object Constants {
         const val MAX_EXPONENT = 5
         const val UNKNOWN_ERROR_CODE = -1
     }
+
+    object UseCaseConstants {
+        val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+    }
 }

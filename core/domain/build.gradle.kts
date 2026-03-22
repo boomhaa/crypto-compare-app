@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("com.android.library")
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -37,6 +39,15 @@ kotlin {
 }
 
 dependencies {
+    // modules
     api(project(":core:model"))
+    api(project(":core:helpers"))
+
+    // coroutines
     implementation(libs.coroutines.core)
+    implementation(libs.coroutines.play.services)
+
+    // di
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 }

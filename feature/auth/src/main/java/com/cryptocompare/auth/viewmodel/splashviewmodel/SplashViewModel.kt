@@ -2,7 +2,7 @@ package com.cryptocompare.auth.viewmodel.splashviewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cryptocompare.domain.repository.AuthRepository
+import com.cryptocompare.domain.usecase.auth.GetCurrentUserUseCase
 import com.cryptocompare.helpers.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -16,7 +16,7 @@ import javax.inject.Inject
 class SplashViewModel
     @Inject
     constructor(
-        private val authRepository: AuthRepository,
+        private val getCurrentUserUseCase: GetCurrentUserUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SplashUiState())
         val uiState = _uiState.asStateFlow()
@@ -29,7 +29,7 @@ class SplashViewModel
             viewModelScope.launch {
                 _uiState.update { uiState -> uiState.copy(isCheckAuth = true, errorMessage = null) }
                 delay(Constants.SPLASH_DURATION_MS)
-                runCatching { authRepository.currentUser }
+                runCatching { getCurrentUserUseCase() }
                     .onSuccess { user ->
                         _uiState.update { uiState ->
                             uiState.copy(
