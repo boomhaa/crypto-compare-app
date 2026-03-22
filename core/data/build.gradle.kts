@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 android {
@@ -35,6 +36,10 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
 }
 
 kotlin {
@@ -61,6 +66,11 @@ dependencies {
     // firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+
+    // local storage
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // tests
     testImplementation(libs.junit)
