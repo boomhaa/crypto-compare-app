@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "providers")
 data class ProviderEntity(
     @PrimaryKey
-    val id: Long,
+    val id: Int,
     val name: String?,
     val website: String?,
     val status: String,
