@@ -19,79 +19,80 @@ import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class MainViewModel
-    @Inject
-    constructor(
-        private val loadPairsUseCase: LoadPairsUseCase,
-        private val syncVisibleTickersUseCase: SyncVisibleTickersUseCase,
-        private val streamDisconnectUseCase: StreamDisconnectUseCase,
-        private val observeTickerEventUseCase: ObserveTickerEventUseCase,
-        private val applyTickerPriceChangesUseCase: ApplyTickerPriceChangesUseCase,
-    ) : ViewModel() {
-        private val _uiState = MutableStateFlow(MainUiState())
-        val uiState = _uiState.asStateFlow()
+@Inject
+constructor(
+    private val loadPairsUseCase: LoadPairsUseCase,
+    private val syncVisibleTickersUseCase: SyncVisibleTickersUseCase,
+    private val streamDisconnectUseCase: StreamDisconnectUseCase,
+    private val observeTickerEventUseCase: ObserveTickerEventUseCase,
+    private val applyTickerPriceChangesUseCase: ApplyTickerPriceChangesUseCase,
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(MainUiState())
+    val uiState = _uiState.asStateFlow()
 
-        private val symbolsById = mutableMapOf<Long, Symbol>()
-        private val subscribedTickers = mutableSetOf<String>()
+    private val symbolsById = mutableMapOf<Long, Symbol>()
+    private val subscribedTickers = mutableSetOf<String>()
 
-        init {
-            observeSocket()
-            loadPairs()
-        }
+    init {
+        observeSocket()
+        loadPairs()
+    }
 
-        fun loadPairs() {
-            _uiState.update { it.copy(error = null, loading = true) }
-            viewModelScope.launch {
-                try {
-                    loadPairsUseCase(symbolsById).collect { symbols ->
-                        _uiState.update { state ->
-                            state.copy(
-                                pairs = symbols,
-                                loading = false,
-                                error = null,
-                            )
-                        }
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    _uiState.update { it.copy(loading = false, error = e.message ?: "Error") }
-                }
-            }
-        }
-
-        fun onSearchQueryChange(query: String) {
-            _uiState.update { it.copy(searchQuery = query) }
-        }
-
-        fun onVisibleTickersChange(visibleTickers: List<String>) {
-            val updatedSubscribedTickers = syncVisibleTickersUseCase(visibleTickers, subscribedTickers)
-
-            subscribedTickers.clear()
-            subscribedTickers.addAll(updatedSubscribedTickers)
-
-            _uiState.update { it.copy(subscribedTickers = updatedSubscribedTickers) }
-        }
-
-        private fun observeSocket() {
-            viewModelScope.launch {
-                observeTickerEventUseCase().collect { event ->
-                    if (event is TickerStreamEvent.TickerPriceChange) {
-                        _uiState.update { state ->
-                            val updatedPairs =
-                                applyTickerPriceChangesUseCase(
-                                    event = event,
-                                    symbolsById = symbolsById,
-                                    currentPairs = state.pairs.toMutableList(),
-                                )
-                            state.copy(pairs = updatedPairs)
-                        }
+    fun loadPairs() {
+        _uiState.update { it.copy(error = null, loading = true) }
+        viewModelScope.launch {
+            try {
+                loadPairsUseCase(symbolsById).collect { symbols ->
+                    _uiState.update { state ->
+                        state.copy(
+                            pairs = symbols,
+                            loading = false,
+                            error = null,
+                        )
                     }
                 }
-            }
-        }
 
-        override fun onCleared() {
-            streamDisconnectUseCase()
-            super.onCleared()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(loading = false, error = e.message ?: "Error") }
+            }
         }
     }
+
+    fun onSearchQueryChange(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    fun onVisibleTickersChange(visibleTickers: List<String>) {
+        val updatedSubscribedTickers = syncVisibleTickersUseCase(visibleTickers, subscribedTickers)
+
+        subscribedTickers.clear()
+        subscribedTickers.addAll(updatedSubscribedTickers)
+
+        _uiState.update { it.copy(subscribedTickers = updatedSubscribedTickers) }
+    }
+
+    private fun observeSocket() {
+        viewModelScope.launch {
+            observeTickerEventUseCase().collect { event ->
+                if (event is TickerStreamEvent.TickerPriceChange) {
+                    _uiState.update { state ->
+                        val updatedPairs =
+                            applyTickerPriceChangesUseCase(
+                                event = event,
+                                symbolsById = symbolsById,
+                                currentPairs = state.pairs.toMutableList(),
+                            )
+                        state.copy(pairs = updatedPairs)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        streamDisconnectUseCase()
+        super.onCleared()
+    }
+}

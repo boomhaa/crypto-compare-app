@@ -9,7 +9,7 @@ import com.cryptocompare.data.local.entity.SymbolEntity
 
 @Database(
     entities = [SymbolEntity::class, ProviderEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class CryptoCompareDatabase : RoomDatabase() {

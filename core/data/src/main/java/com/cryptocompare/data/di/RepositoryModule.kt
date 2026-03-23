@@ -1,6 +1,8 @@
 package com.cryptocompare.data.di
 
 import com.cryptocompare.data.BuildConfig
+import com.cryptocompare.data.local.dao.ProviderDao
+import com.cryptocompare.data.local.dao.SymbolDao
 import com.cryptocompare.data.repository.AuthRepositoryImpl
 import com.cryptocompare.data.repository.CryptoCompareRepositoryImpl
 import com.cryptocompare.data.repository.TickerStreamRepositoryImpl
@@ -14,6 +16,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -27,8 +30,13 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideCryptoCompareRepository(api: CryptoCompareApi): CryptoCompareRepository =
-        CryptoCompareRepositoryImpl(api)
+    fun provideCryptoCompareRepository(
+        api: CryptoCompareApi,
+        providerDao: ProviderDao,
+        symbolDao: SymbolDao,
+        @Named("ioDispatcher") ioDispatcher: CoroutineDispatcher,
+    ): CryptoCompareRepository =
+        CryptoCompareRepositoryImpl(api, symbolDao, providerDao, ioDispatcher)
 
     @Provides
     @Singleton
