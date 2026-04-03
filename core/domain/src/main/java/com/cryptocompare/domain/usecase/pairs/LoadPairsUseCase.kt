@@ -19,8 +19,8 @@ class LoadPairsUseCase
         suspend operator fun invoke(symbolsById: MutableMap<Long, Symbol>): Flow<List<PairUiItem>> {
             tickerStreamRepository.connect()
 
-            return cryptoCompareRepository.getSymbols().map { page ->
-                page.forEach { symbol ->
+            return cryptoCompareRepository.getSymbols().map { symbols ->
+                symbols.forEach { symbol ->
                     symbolsById[symbol.id] = symbol
                 }
                 symbolsById.values.toPairItems()

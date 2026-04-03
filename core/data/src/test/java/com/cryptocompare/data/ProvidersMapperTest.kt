@@ -1,6 +1,8 @@
 package com.cryptocompare.data
 
-import com.cryptocompare.data.mapper.toDomain
+import com.cryptocompare.data.local.entity.ProviderEntity
+import com.cryptocompare.data.mapper.toDomainFromEntity
+import com.cryptocompare.data.mapper.toEntityFromDto
 import com.cryptocompare.model.ProviderStatus
 import com.cryptocompare.network.dto.apiDTO.ProviderDto
 import org.junit.Assert.assertEquals
@@ -9,68 +11,57 @@ import org.junit.Test
 
 class ProvidersMapperTest {
     @Test
-    fun `ProviderDto toDomain maps fields and defaults name to empty string`() {
-        val dto =
-            ProviderDto(
+    fun `ProviderEntity toDomainFromEntity maps all fields`() {
+        val entity =
+            ProviderEntity(
                 id = 42,
-                name = null,
-                webSite = "https://example.com",
-                baseUrl = "https://api.example.com",
-                status = ProviderStatus.Enabled,
+                name = "Provider",
+                website = "https://example.com",
+                status = ProviderStatus.Enabled.name,
+                syncedAtMillis = 123L,
             )
 
-        val domain = dto.toDomain()
+        val domain = entity.toDomainFromEntity()
 
         assertEquals(42, domain.id)
-        assertEquals("", domain.name)
+        assertEquals("Provider", domain.name)
         assertEquals("https://example.com", domain.webSite)
         assertEquals(ProviderStatus.Enabled, domain.status)
     }
 
     @Test
-    fun `ProviderDto toDomain keeps nullable webSite`() {
+    fun `ProviderDto toEntityFromDomain maps nullable values`() {
         val dto =
             ProviderDto(
                 id = 1,
-                name = "Name",
+                name = null,
                 webSite = null,
                 baseUrl = null,
                 status = ProviderStatus.None,
             )
 
-        val domain = dto.toDomain()
+        val entity = dto.toEntityFromDto(syncedAtMillis = 777L)
 
-        assertNull(domain.webSite)
-        assertEquals(ProviderStatus.None, domain.status)
+        assertEquals(1, entity.id)
+        assertNull(entity.name)
+        assertNull(entity.website)
+        assertEquals(ProviderStatus.None.name, entity.status)
+        assertEquals(777L, entity.syncedAtMillis)
     }
 
     @Test
-    fun `List ProviderDto toDomain maps each element`() {
-        val list =
+    fun `List ProviderEntity toDomainFromEntity maps each element`() {
+        val entities =
             listOf(
-                ProviderDto(
-                    id = 1,
-                    name = "A",
-                    webSite = "a",
-                    baseUrl = null,
-                    status = ProviderStatus.Enabled,
-                ),
-                ProviderDto(
-                    id = 2,
-                    name = "B",
-                    webSite = "b",
-                    baseUrl = null,
-                    status = ProviderStatus.Disables,
-                ),
+                ProviderEntity(1, "A", "a", ProviderStatus.Enabled.name, 1L),
+                ProviderEntity(2, "B", "b", ProviderStatus.Disables.name, 1L),
             )
 
-        val domain = list.toDomain()
+        val domain = entities.toDomainFromEntity()
 
         assertEquals(2, domain.size)
-        assertEquals(1, domain[0].id)
         assertEquals("A", domain[0].name)
         assertEquals(ProviderStatus.Enabled, domain[0].status)
-        assertEquals(2, domain[1].id)
         assertEquals("B", domain[1].name)
         assertEquals(ProviderStatus.Disables, domain[1].status)
     }

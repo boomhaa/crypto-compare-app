@@ -11,20 +11,27 @@ import androidx.room.PrimaryKey
         ForeignKey(
             entity = ProviderEntity::class,
             parentColumns = ["id"],
-            childColumns = ["providerId"],
-            onDelete = ForeignKey.CASCADE
-        )
+            childColumns = ["providerSellId"],
+            onDelete = ForeignKey.NO_ACTION,
+        ),
+        ForeignKey(
+            entity = ProviderEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["providerBuyId"],
+            onDelete = ForeignKey.NO_ACTION,
+        ),
     ],
-    indices = [Index(value = ["providerId"])],
+    indices = [Index(value = ["providerSellId"]), Index(value = ["providerBuyId"])],
 )
 data class SymbolEntity(
     @PrimaryKey
     val id: Long,
     val ticker: String?,
     val symbol: String?,
-    val providerId: Int,
-    val priceBuy: Double,
+    val providerSellId: Int,
     val priceSell: Double,
+    val providerBuyId: Int,
+    val priceBuy: Double,
     val updatedAt: String,
     val syncedAtMillis: Long,
 )

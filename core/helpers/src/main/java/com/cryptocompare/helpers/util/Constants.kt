@@ -4,7 +4,11 @@ object Constants {
     const val SPLASH_DURATION_MS = 2000L
 
     const val MAX_TICKERS_ON_SCREEN = 10
-    const val SYMBOLS_IN_ROW = 25
+
+    object CryptoCompareRepositoryConstants {
+        const val CATALOG_CACHE_TTL_MILLIS = 24 * 60 * 60 * 1000L
+        const val SYMBOLS_IN_ROW = 25
+    }
 
     object WebSocketConstants {
         const val NORMAL_CLOSURE_STATUS = 1000
@@ -17,5 +21,9 @@ object Constants {
 
     object UseCaseConstants {
         val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+    }
+
+    object WorkerConstants {
+        const val UNIQUE_WORK_NAME = "refresh_catalog_once_per_day"
     }
 }

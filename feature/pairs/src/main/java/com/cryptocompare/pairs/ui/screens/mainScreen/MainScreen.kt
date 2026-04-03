@@ -1,3 +1,5 @@
+@file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+
 package com.cryptocompare.pairs.ui.screens.mainScreen
 
 import androidx.compose.foundation.background
@@ -5,7 +7,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cryptocompare.helpers.util.Constants
 import com.cryptocompare.pairs.ui.screens.mainScreen.components.ListHeader
 import com.cryptocompare.pairs.ui.screens.mainScreen.components.PairRow
+import com.cryptocompare.pairs.ui.screens.mainScreen.components.PairRowSkeleton
 import com.cryptocompare.pairs.viewmodel.mainViewModel.MainViewModel
 import com.cryptocompare.ui.theme.Dimensions
 import com.cryptocompare.ui.theme.bgPrimary
@@ -103,11 +104,22 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
             when {
                 uiState.value.loading -> {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        CircularProgressIndicator()
+                    ListHeader()
+
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        val rowSpacing = Dimensions.Gap.sm
+                        val totalSpacing = rowSpacing * (Constants.MAX_TICKERS_ON_SCREEN - 1)
+                        val calculatedRowHeight =
+                            ((maxHeight - totalSpacing) / Constants.MAX_TICKERS_ON_SCREEN).coerceAtLeast(40.dp)
+
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(rowSpacing),
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            items(Constants.MAX_TICKERS_ON_SCREEN) {
+                                PairRowSkeleton(rowHeight = calculatedRowHeight)
+                            }
+                        }
                     }
                 }
 

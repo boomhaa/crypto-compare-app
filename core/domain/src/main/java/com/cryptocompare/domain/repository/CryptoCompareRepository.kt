@@ -7,5 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface CryptoCompareRepository {
     suspend fun getProviders(): Result<List<Provider>>
 
-    suspend fun getSymbols(): Flow<List<Symbol>>
+    fun getSymbols(): Flow<List<Symbol>>
+
+    suspend fun refreshCatalog(): Result<Unit>
 }

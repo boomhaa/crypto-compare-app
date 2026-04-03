@@ -4,8 +4,9 @@ data class SymbolDto(
     val id: Long,
     val ticker: String?,
     val symbol: String?,
-    val providerId: Int,
+    val providerSellId: Int,
     val priceSell: Double,
+    val providerBuyId: Int,
     val priceBuy: Double,
     val updatedAt: String,
 )

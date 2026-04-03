@@ -9,11 +9,16 @@ fun Collection<Symbol>.toPairItems(): List<PairUiItem> =
     groupBy { it.ticker?.uppercase().orEmpty() }
         .map { (ticker, symbols) ->
             val prices = symbols.flatMap { listOf(it.priceBuy, it.priceSell) }
+            val providerIds =
+                symbols
+                    .flatMap { listOf(it.providerSellId, it.providerBuyId) }
+                    .filter { it > 0 }
+                    .distinct()
 
             PairUiItem(
                 ticker = ticker,
                 symbolIds = symbols.map { it.id },
-                providerIds = symbols.map { it.providerId },
+                providerIds = providerIds,
                 minPrice = prices.minOrNull() ?: 0.0,
                 maxPrice = prices.maxOrNull() ?: 0.0,
             )
@@ -24,11 +29,16 @@ fun Collection<Symbol>.toPairItemByTicker(ticker: String): PairUiItem? {
     if (symbols.isEmpty()) return null
 
     val prices = symbols.flatMap { listOf(it.priceBuy, it.priceSell) }
+    val providerIds =
+        symbols
+            .flatMap { listOf(it.providerSellId, it.providerBuyId) }
+            .filter { it > 0 }
+            .distinct()
 
     return PairUiItem(
         ticker = ticker.uppercase(),
         symbolIds = symbols.map { it.id },
-        providerIds = symbols.map { it.providerId },
+        providerIds = providerIds,
         minPrice = prices.minOrNull() ?: 0.0,
         maxPrice = prices.maxOrNull() ?: 0.0,
     )
