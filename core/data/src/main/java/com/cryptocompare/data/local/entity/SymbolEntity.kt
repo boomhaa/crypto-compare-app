@@ -12,16 +12,16 @@ import androidx.room.PrimaryKey
             entity = ProviderEntity::class,
             parentColumns = ["id"],
             childColumns = ["providerSellId"],
-            onDelete = ForeignKey.NO_ACTION
+            onDelete = ForeignKey.NO_ACTION,
         ),
         ForeignKey(
             entity = ProviderEntity::class,
             parentColumns = ["id"],
             childColumns = ["providerBuyId"],
-            onDelete = ForeignKey.NO_ACTION
-        )
+            onDelete = ForeignKey.NO_ACTION,
+        ),
     ],
-    indices = [Index(value = ["providerSellId"]), Index(value = ["providerBuyId"])]
+    indices = [Index(value = ["providerSellId"]), Index(value = ["providerBuyId"])],
 )
 data class SymbolEntity(
     @PrimaryKey

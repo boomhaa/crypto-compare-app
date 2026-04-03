@@ -11,11 +11,11 @@ import java.util.concurrent.TimeUnit
 
 object WorkScheduler {
     fun scheduleDailyRefreshCatalog(context: Context) {
-        val constraints = Constraints
-            .Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
+        val constraints =
+            Constraints
+                .Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
 
         val refreshRequest =
             PeriodicWorkRequestBuilder<RefreshCatalogWorker>(1, TimeUnit.DAYS)
@@ -25,7 +25,7 @@ object WorkScheduler {
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             Constants.WorkerConstants.UNIQUE_WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
-            refreshRequest
+            refreshRequest,
         )
     }
 }

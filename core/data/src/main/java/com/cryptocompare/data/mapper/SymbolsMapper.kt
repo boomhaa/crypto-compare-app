@@ -28,6 +28,9 @@ fun SymbolDto.toEntityFromDto(syncedAtMillis: Long): SymbolEntity =
         syncedAtMillis = syncedAtMillis,
     )
 
-fun List<SymbolDto>.toEntityFromDto(syncedAtMillis: Long): List<SymbolEntity> = map { it.toEntityFromDto(syncedAtMillis) }
+fun List<SymbolDto>.toEntityFromDto(syncedAtMillis: Long): List<SymbolEntity> =
+    map {
+        it.toEntityFromDto(syncedAtMillis)
+    }
 
 fun List<SymbolEntity>.toDomainFromEntity(): List<Symbol> = map(SymbolEntity::toDomainFromEntity)

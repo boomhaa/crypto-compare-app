@@ -13,7 +13,7 @@ fun ProviderEntity.toDomainFromEntity(): Provider =
         status = ProviderStatus.valueOf(status),
     )
 
-fun ProviderDto.toEntityFromDomain(syncedAtMillis: Long): ProviderEntity =
+fun ProviderDto.toEntityFromDto(syncedAtMillis: Long): ProviderEntity =
     ProviderEntity(
         id = id,
         name = name,
@@ -24,7 +24,7 @@ fun ProviderDto.toEntityFromDomain(syncedAtMillis: Long): ProviderEntity =
 
 fun List<ProviderEntity>.toDomainFromEntity(): List<Provider> = map(ProviderEntity::toDomainFromEntity)
 
-fun List<ProviderDto>.toEntityFromDomain(syncedAtMillis: Long): List<ProviderEntity> =
+fun List<ProviderDto>.toEntityFromDto(syncedAtMillis: Long): List<ProviderEntity> =
     map {
-        it.toEntityFromDomain(syncedAtMillis)
+        it.toEntityFromDto(syncedAtMillis)
     }

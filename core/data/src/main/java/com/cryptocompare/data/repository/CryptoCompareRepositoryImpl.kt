@@ -1,11 +1,9 @@
 package com.cryptocompare.data.repository
 
-import android.util.Log
 import com.cryptocompare.data.local.dao.ProviderDao
 import com.cryptocompare.data.local.dao.SymbolDao
 import com.cryptocompare.data.local.entity.SymbolEntity
 import com.cryptocompare.data.mapper.toDomainFromEntity
-import com.cryptocompare.data.mapper.toEntityFromDomain
 import com.cryptocompare.data.mapper.toEntityFromDto
 import com.cryptocompare.domain.repository.CryptoCompareRepository
 import com.cryptocompare.helpers.util.Constants
@@ -18,9 +16,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -30,48 +28,37 @@ import kotlin.collections.orEmpty
 
 @Singleton
 class CryptoCompareRepositoryImpl
-@Inject
-constructor(
-    private val cryptoCompareApi: CryptoCompareApi,
-    private val symbolDao: SymbolDao,
-    private val providerDao: ProviderDao,
-    @Named("ioDispatcher") private val ioDispatcher: CoroutineDispatcher
-) : CryptoCompareRepository {
-    val refreshSymbolsScope = CoroutineScope(SupervisorJob() + ioDispatcher)
-    var refreshSymbolsJob: Job? = null
+    @Inject
+    constructor(
+        private val cryptoCompareApi: CryptoCompareApi,
+        private val symbolDao: SymbolDao,
+        private val providerDao: ProviderDao,
+        @Named("ioDispatcher") private val ioDispatcher: CoroutineDispatcher,
+    ) : CryptoCompareRepository {
+        private val refreshSymbolsScope = CoroutineScope(SupervisorJob() + ioDispatcher)
+        private var refreshSymbolsJob: Job? = null
 
-    // PROVIDERS
-    //get providers
-    override suspend fun getProviders(): Result<List<Provider>> =
-        withContext(ioDispatcher) {
-            try {
-                val providers = providerDao.getAll().toDomainFromEntity()
-                val isCacheStale =
-                    Constants.CryptoCompareRepositoryConstants.CATALOG_CACHE_TTL_MILLIS <=
-                            System.currentTimeMillis() - providerDao.getLastUpdate()
+        // ─── Providers ────────────────────────────────────────────────────────────
 
-                if (providers.isNotEmpty() && !isCacheStale) {
-                    Result.success(providers)
-                } else {
+        // get providers
+        override suspend fun getProviders(): Result<List<Provider>> =
+            withContext(ioDispatcher) {
+                runCatching {
+                    val providers = providerDao.getAll().toDomainFromEntity()
+
+                    if (providers.isNotEmpty() && !isCacheStale(providerDao.getLastUpdate())) {
+                        return@runCatching providers
+                    }
                     refreshProviders()
-                }
-
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                val providers = providerDao.getAll().toDomainFromEntity()
-                if (providers.isNotEmpty()) {
-                    Result.success(providers)
-                } else {
-                    Result.failure(e)
-                }
-
+                }.onFailure { error -> if (error is CancellationException) throw error }
+                    .recoverCatching { error ->
+                        val cached = providerDao.getAll().toDomainFromEntity()
+                        cached.ifEmpty { throw error }
+                    }
             }
-        }
 
-    // update providers
-    private suspend fun refreshProviders(): Result<List<Provider>> =
-        runCatching {
+        // update providers
+        private suspend fun refreshProviders(): List<Provider> {
             val syncedAtMillis = System.currentTimeMillis()
             val response = cryptoCompareApi.getProviders()
 
@@ -80,72 +67,71 @@ constructor(
                 throw IllegalStateException(message)
             }
 
-            val providers = response.providers.orEmpty().toEntityFromDomain(syncedAtMillis)
+            val providers = response.providers.orEmpty().toEntityFromDto(syncedAtMillis)
             providerDao.syncProviders(providers)
-            providers.toDomainFromEntity()
-        }.onFailure { error ->
-            if (error is CancellationException) {
-                throw error
-            }
+            return providers.toDomainFromEntity()
         }
 
-    // SYMBOLS
-    // get symbols
-    override suspend fun getSymbols(): Flow<List<Symbol>> {
-        val cachedSymbols = withContext(ioDispatcher) {
-            symbolDao.getAll()
-        }
-        val isRefresh =
-            cachedSymbols.isEmpty() || Constants.CryptoCompareRepositoryConstants.CATALOG_CACHE_TTL_MILLIS <= System.currentTimeMillis() - symbolDao.getLastUpdate()
-        val observeSymbolsFlow = if (cachedSymbols.isEmpty()) {
-            symbolDao.observeAll().dropWhile { it.isEmpty() }
-        } else {
-            symbolDao.observeAll()
-        }
+        // ─── Symbols ──────────────────────────────────────────────────────────────
 
-        if (cachedSymbols.isEmpty()) {
-            refreshJobStart(streamToDb = true)
-        } else if (isRefresh) {
-            refreshJobStart()
-        }
+        // get symbols
+        override fun getSymbols(): Flow<List<Symbol>> =
+            channelFlow {
+                val cachedSymbols =
+                    withContext(ioDispatcher) {
+                        symbolDao.getAll()
+                    }
+                val isRefresh =
+                    cachedSymbols.isEmpty() || isCacheStale(symbolDao.getLastUpdate())
 
-        return observeSymbolsFlow.map { symbolEntity -> symbolEntity.toDomainFromEntity() }.flowOn(ioDispatcher)
-    }
+                if (cachedSymbols.isEmpty()) {
+                    refreshJobStart(streamToDb = true)
+                    symbolDao
+                        .observeAll()
+                        .dropWhile { it.isEmpty() }
+                        .collect { send(it.toDomainFromEntity()) }
+                } else {
+                    if (isRefresh) refreshJobStart()
+                    symbolDao
+                        .observeAll()
+                        .collect { send(it.toDomainFromEntity()) }
+                }
+            }.flowOn(ioDispatcher)
 
-    override suspend fun refreshCatalog(): Result<Unit> =
-        withContext(ioDispatcher) {
-            runCatching {
-                refreshSymbols().getOrThrow()
-                Unit
-            }.onFailure { error ->
-                if (error is CancellationException) {
-                    throw error
+        override suspend fun refreshCatalog(): Result<Unit> =
+            withContext(ioDispatcher) {
+                runCatching {
+                    refreshSymbols()
+                }.onFailure { error ->
+                    if (error is CancellationException) {
+                        throw error
+                    }
                 }
             }
+
+        // start job to refresh symbols in background
+        private fun refreshJobStart(streamToDb: Boolean = false) {
+            if (refreshSymbolsJob?.isActive == true) return
+
+            refreshSymbolsJob =
+                refreshSymbolsScope.launch {
+                    refreshSymbols(streamToDb)
+                }
         }
 
-    // start job to refresh symbols in background
-    private fun refreshJobStart(streamToDb: Boolean = false) {
-        if (refreshSymbolsJob?.isActive == true) return
-
-        refreshSymbolsJob = refreshSymbolsScope.launch {
-            refreshSymbols(streamToDb).getOrThrow()
-        }
-    }
-
-    // update symbols
-    private suspend fun refreshSymbols(streamToDb: Boolean = false): Result<List<Symbol>> =
-        runCatching {
+        // update symbols
+        private suspend fun refreshSymbols(streamToDb: Boolean = false) {
             var skip = 0
             val syncedAtMillis = System.currentTimeMillis()
             val refreshedSymbols = mutableListOf<SymbolEntity>()
-            refreshProviders().getOrThrow()
+            refreshProviders()
 
             while (true) {
-                val response = cryptoCompareApi.getSymbols(
-                    skip = skip,
-                    rows = Constants.CryptoCompareRepositoryConstants.SYMBOLS_IN_ROW
-                )
+                val response =
+                    cryptoCompareApi.getSymbols(
+                        skip = skip,
+                        rows = Constants.CryptoCompareRepositoryConstants.SYMBOLS_IN_ROW,
+                    )
 
                 if (response.errorCode != 0) {
                     val message = response.errorMsgs?.joinToString("\n") ?: "Unknown error"
@@ -154,7 +140,6 @@ constructor(
 
                 val symbols = response.symbols.orEmpty()
                 if (symbols.isEmpty()) break
-                Log.d("CryptoRepo", response.toString())
 
                 val refreshedSymbolsPage = symbols.toEntityFromDto(syncedAtMillis)
                 if (streamToDb) {
@@ -168,9 +153,9 @@ constructor(
                 symbolDao.syncSymbols(refreshedSymbols)
             }
             refreshedSymbols.toDomainFromEntity()
-        }.onFailure { error ->
-            if (error is CancellationException) {
-                throw error
-            }
         }
-}
+
+        private fun isCacheStale(lastUpdatedMillis: Long): Boolean =
+            System.currentTimeMillis() - lastUpdatedMillis >=
+                Constants.CryptoCompareRepositoryConstants.CATALOG_CACHE_TTL_MILLIS
+    }

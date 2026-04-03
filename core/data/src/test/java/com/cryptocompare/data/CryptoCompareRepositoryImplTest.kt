@@ -1,5 +1,9 @@
 package com.cryptocompare.data
 
+import com.cryptocompare.data.local.dao.ProviderDao
+import com.cryptocompare.data.local.dao.SymbolDao
+import com.cryptocompare.data.local.entity.ProviderEntity
+import com.cryptocompare.data.local.entity.SymbolEntity
 import com.cryptocompare.data.repository.CryptoCompareRepositoryImpl
 import com.cryptocompare.model.Provider
 import com.cryptocompare.model.ProviderStatus
@@ -9,8 +13,11 @@ import com.cryptocompare.network.dto.apiDTO.GetSymbolsResponse
 import com.cryptocompare.network.dto.apiDTO.ProviderDto
 import com.cryptocompare.network.dto.apiDTO.SymbolDto
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -18,6 +25,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CryptoCompareRepositoryImplTest {
+    private val dispatcher = StandardTestDispatcher()
+
     private fun providerDto(
         id: Int,
         name: String? = "Provider$id",
@@ -30,11 +39,33 @@ class CryptoCompareRepositoryImplTest {
         status = status,
     )
 
+    private fun createRepo(
+        api: CryptoCompareApi = mockk(),
+        symbolDao: SymbolDao = mockk(),
+        providerDao: ProviderDao = mockk(),
+    ): CryptoCompareRepositoryImpl =
+        CryptoCompareRepositoryImpl(
+            cryptoCompareApi = api,
+            symbolDao = symbolDao,
+            providerDao = providerDao,
+            ioDispatcher = dispatcher,
+        )
+
     @Test
     fun `getProviders returns success mapped providers when errorCode=0`() =
-        runTest {
+        runTest(dispatcher) {
             val api = mockk<CryptoCompareApi>()
-            val repo = CryptoCompareRepositoryImpl(api)
+            val symbolDao = mockk<SymbolDao>(relaxed = true)
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
+
+            coEvery { providerDao.getAll() } returns
+                listOf(
+                    ProviderEntity(1, "Binance", "https://p1.example", ProviderStatus.Enabled.name, 100L),
+                    ProviderEntity(2, null, "https://p2.example", ProviderStatus.Enabled.name, 100L),
+                )
+            coEvery { providerDao.getLastUpdate() } returns 0L
+            coEvery { providerDao.syncProviders(any()) } returns Unit
 
             coEvery { api.getProviders() } returns
                 GetProvidersResponse(
@@ -52,14 +83,41 @@ class CryptoCompareRepositoryImplTest {
             assertEquals("Binance", providers[0].name)
             assertEquals(ProviderStatus.Enabled, providers[0].status)
             assertEquals(2, providers[1].id)
-            assertEquals("", providers[1].name)
+            assertEquals(null, providers[1].name)
+            coVerify(exactly = 1) { api.getProviders() }
+        }
+
+    @Test
+    fun `getProviders returns cached providers when cache is fresh`() =
+        runTest(dispatcher) {
+            val api = mockk<CryptoCompareApi>()
+            val symbolDao = mockk<SymbolDao>(relaxed = true)
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
+            val now = System.currentTimeMillis()
+
+            coEvery { providerDao.getAll() } returns
+                listOf(ProviderEntity(1, "Binance", "https://p1.example", ProviderStatus.Enabled.name, now))
+            coEvery { providerDao.getLastUpdate() } returns now
+
+            val result = repo.getProviders()
+
+            assertTrue(result.isSuccess)
+            assertEquals(1, result.getOrThrow().size)
+            coVerify(exactly = 0) { api.getProviders() }
         }
 
     @Test
     fun `getProviders returns success empty list when providers is null`() =
-        runTest {
+        runTest(dispatcher) {
             val api = mockk<CryptoCompareApi>()
-            val repo = CryptoCompareRepositoryImpl(api)
+            val symbolDao = mockk<SymbolDao>(relaxed = true)
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
+
+            coEvery { providerDao.getAll() } returnsMany listOf(emptyList(), emptyList())
+            coEvery { providerDao.getLastUpdate() } returns 0L
+            coEvery { providerDao.syncProviders(any()) } returns Unit
 
             coEvery { api.getProviders() } returns
                 GetProvidersResponse(
@@ -76,9 +134,14 @@ class CryptoCompareRepositoryImplTest {
 
     @Test
     fun `getProviders returns failure with joined error messages when errorCode != 0`() =
-        runTest {
+        runTest(dispatcher) {
             val api = mockk<CryptoCompareApi>()
-            val repo = CryptoCompareRepositoryImpl(api)
+            val symbolDao = mockk<SymbolDao>(relaxed = true)
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
+
+            coEvery { providerDao.getAll() } returnsMany listOf(emptyList(), emptyList())
+            coEvery { providerDao.getLastUpdate() } returns 0L
 
             coEvery { api.getProviders() } returns
                 GetProvidersResponse(
@@ -97,9 +160,14 @@ class CryptoCompareRepositoryImplTest {
 
     @Test
     fun `getProviders returns failure with Unknown error when errorCode != 0 and errorMsgs null`() =
-        runTest {
+        runTest(dispatcher) {
             val api = mockk<CryptoCompareApi>()
-            val repo = CryptoCompareRepositoryImpl(api)
+            val symbolDao = mockk<SymbolDao>(relaxed = true)
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
+
+            coEvery { providerDao.getAll() } returnsMany listOf(emptyList(), emptyList())
+            coEvery { providerDao.getLastUpdate() } returns 0L
 
             coEvery { api.getProviders() } returns
                 GetProvidersResponse(
@@ -115,48 +183,102 @@ class CryptoCompareRepositoryImplTest {
         }
 
     @Test
-    fun `getProviders returns failure when api throws exception`() =
-        runTest {
+    fun `getProviders returns cached providers when api throws exception`() =
+        runTest(dispatcher) {
             val api = mockk<CryptoCompareApi>()
-            val repo = CryptoCompareRepositoryImpl(api)
+            val symbolDao = mockk<SymbolDao>(relaxed = true)
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
+
+            coEvery { providerDao.getAll() } returnsMany
+                listOf(
+                    emptyList(),
+                    listOf(ProviderEntity(1, "Binance", "https://p1.example", ProviderStatus.Enabled.name, 100L)),
+                    listOf(ProviderEntity(1, "Binance", "https://p1.example", ProviderStatus.Enabled.name, 100L)),
+                )
+            coEvery { providerDao.getLastUpdate() } returns 0L
 
             coEvery { api.getProviders() } throws IllegalStateException("boom")
 
             val result = repo.getProviders()
 
-            assertTrue(result.isFailure)
-            assertEquals("boom", result.exceptionOrNull()!!.message)
+            assertTrue(result.isSuccess)
+            assertEquals(1, result.getOrThrow().size)
         }
 
     @Test(expected = CancellationException::class)
     fun `getProviders rethrows CancellationException`() =
-        runTest {
+        runTest(dispatcher) {
             val api = mockk<CryptoCompareApi>()
-            val repo = CryptoCompareRepositoryImpl(api)
+            val symbolDao = mockk<SymbolDao>(relaxed = true)
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
 
+            coEvery { providerDao.getAll() } returns emptyList()
+            coEvery { providerDao.getLastUpdate() } returns 0L
             coEvery { api.getProviders() } throws CancellationException("cancel")
 
             repo.getProviders()
         }
 
     @Test
-    fun `getSymbols emits paged data and stops when API returns empty page`() =
-        runTest {
+    fun `getSymbols returns mapped symbols from database flow`() =
+        runTest(dispatcher) {
+            val api = mockk<CryptoCompareApi>(relaxed = true)
+            val symbolDao = mockk<SymbolDao>()
+            val providerDao = mockk<ProviderDao>(relaxed = true)
+            val repo = createRepo(api, symbolDao, providerDao)
+
+            coEvery { symbolDao.getAll() } returns
+                listOf(SymbolEntity(11L, "btcusdt", "BTC/USDT", 1, 101.0, 1, 99.0, "", 100L))
+            coEvery { symbolDao.getLastUpdate() } returns System.currentTimeMillis()
+            coEvery { symbolDao.observeAll() } returns
+                flowOf(listOf(SymbolEntity(11L, "btcusdt", "BTC/USDT", 1, 101.0, 1, 99.0, "", 100L)))
+
+            val pages = mutableListOf<List<com.cryptocompare.model.Symbol>>()
+            repo.getSymbols().collect { pages.add(it) }
+
+            assertEquals(1, pages.size)
+            assertEquals("btcusdt", pages[0].single().ticker)
+            coVerify(exactly = 0) { api.getSymbols(any(), any()) }
+        }
+
+    @Test
+    fun `refreshCatalog fetches symbol pages and writes merged result`() =
+        runTest(dispatcher) {
             val api = mockk<CryptoCompareApi>()
-            val repo = CryptoCompareRepositoryImpl(api)
+            val symbolDao = mockk<SymbolDao>(relaxed = true)
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
+
+            coEvery { providerDao.getAll() } returnsMany
+                listOf(
+                    emptyList(),
+                    listOf(ProviderEntity(1, "Provider1", "https://p1.example", ProviderStatus.Enabled.name, 100L)),
+                    listOf(ProviderEntity(2, "Provider2", "https://p2.example", ProviderStatus.Enabled.name, 100L)),
+                )
+            coEvery { providerDao.getLastUpdate() } returns 0L
+            coEvery { providerDao.syncProviders(any()) } returns Unit
+
+            coEvery { api.getProviders() } returns
+                GetProvidersResponse(
+                    errorCode = 0,
+                    errorMsgs = null,
+                    providers = listOf(providerDto(1), providerDto(2)),
+                )
 
             coEvery { api.getSymbols(skip = 0, rows = 25) } returns
                 GetSymbolsResponse(
                     errorCode = 0,
                     errorMsgs = null,
-                    symbols = listOf(SymbolDto(11L, "btcusdt", "BTC/USDT", 1, 101.0, 99.0, "")),
+                    symbols = listOf(SymbolDto(11L, "btcusdt", "BTC/USDT", 1, 101.0, 2, 99.0, "")),
                 )
 
             coEvery { api.getSymbols(skip = 25, rows = 25) } returns
                 GetSymbolsResponse(
                     errorCode = 0,
                     errorMsgs = null,
-                    symbols = listOf(SymbolDto(21L, "ethusdt", "ETH/USDT", 2, 11.0, 10.5, "")),
+                    symbols = listOf(SymbolDto(21L, "ethusdt", "ETH/USDT", 1, 11.0, 2, 10.5, "")),
                 )
 
             coEvery { api.getSymbols(skip = 50, rows = 25) } returns
@@ -166,11 +288,9 @@ class CryptoCompareRepositoryImplTest {
                     symbols = emptyList(),
                 )
 
-            val pages = mutableListOf<List<com.cryptocompare.model.Symbol>>()
-            repo.getSymbols().collect { pages.add(it) }
+            val result = repo.refreshCatalog()
 
-            assertEquals(2, pages.size)
-            assertEquals("btcusdt", pages[0].single().ticker)
-            assertEquals("ethusdt", pages[1].single().ticker)
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { symbolDao.syncSymbols(withArg { assertEquals(2, it.size) }) }
         }
 }

@@ -5,7 +5,7 @@ object Constants {
 
     const val MAX_TICKERS_ON_SCREEN = 10
 
-    object CryptoCompareRepositoryConstants{
+    object CryptoCompareRepositoryConstants {
         const val CATALOG_CACHE_TTL_MILLIS = 24 * 60 * 60 * 1000L
         const val SYMBOLS_IN_ROW = 25
     }

@@ -35,8 +35,7 @@ object RepositoryModule {
         providerDao: ProviderDao,
         symbolDao: SymbolDao,
         @Named("ioDispatcher") ioDispatcher: CoroutineDispatcher,
-    ): CryptoCompareRepository =
-        CryptoCompareRepositoryImpl(api, symbolDao, providerDao, ioDispatcher)
+    ): CryptoCompareRepository = CryptoCompareRepositoryImpl(api, symbolDao, providerDao, ioDispatcher)
 
     @Provides
     @Singleton

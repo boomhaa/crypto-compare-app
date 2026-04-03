@@ -133,9 +133,9 @@ class MainViewModelTest {
 
             val loadPairsUseCase =
                 loadPairsUseCaseMock { symbolsById ->
-                    symbolsById[1L] = Symbol(1L, "btcusdt", "BTC/USDT", 1, 101.0, 99.0)
-                    symbolsById[2L] = Symbol(2L, "ethusdt", "ETH/USDT", 1, 11.0, 10.0)
-                    symbolsById[3L] = Symbol(3L, "btcusdt", "BTC/USDT", 2, 102.0, 98.5)
+                    symbolsById[1L] = Symbol(1L, "btcusdt", "BTC/USDT", 1, 101.0, 1, 99.0)
+                    symbolsById[2L] = Symbol(2L, "ethusdt", "ETH/USDT", 1, 11.0, 1, 10.0)
+                    symbolsById[3L] = Symbol(3L, "btcusdt", "BTC/USDT", 2, 102.0, 2, 98.5)
                     flowOf(pairs)
                 }
 
@@ -202,8 +202,8 @@ class MainViewModelTest {
 
             val loadPairsUseCase =
                 loadPairsUseCaseMock { symbolsById ->
-                    symbolsById[1L] = Symbol(1L, "btcusdt", "BTC/USDT", 1, 101.0, 99.0)
-                    symbolsById[2L] = Symbol(2L, "btcusdt", "BTC/USDT", 2, 103.0, 98.0)
+                    symbolsById[1L] = Symbol(1L, "btcusdt", "BTC/USDT", 1, 101.0, 1, 99.0)
+                    symbolsById[2L] = Symbol(2L, "btcusdt", "BTC/USDT", 2, 103.0, 2, 98.0)
                     flowOf(initialPairs)
                 }
 
