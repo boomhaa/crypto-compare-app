@@ -12,5 +12,5 @@ class SignInWithEmailUseCase
         suspend operator fun invoke(
             email: String,
             password: String,
-        ): Result<AuthUser> = authRepository.signUpWithEmail(email, password)
+        ): Result<AuthUser> = authRepository.signInWithEmail(email, password)
     }

@@ -22,4 +22,8 @@ object Constants {
     object UseCaseConstants {
         val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
     }
+
+    object WorkerConstants {
+        const val UNIQUE_WORK_NAME = "refresh_catalog_once_per_day"
+    }
 }
