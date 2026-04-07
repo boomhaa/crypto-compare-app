@@ -34,6 +34,9 @@ jobs:
           test -f app/google-services.json
 
       - name: Run ktlint
+        env:
+          ORG_GRADLE_PROJECT_RELEASE_BASE_URL: ${{ secrets.RELEASE_BASE_URL }}
+          ORG_GRADLE_PROJECT_RELEASE_WS_BASE_URL: ${{ secrets.RELEASE_WS_BASE_URL }}
         run: ./gradlew --no-daemon ktlintCheck
 
   tests:
@@ -68,6 +71,9 @@ jobs:
           test -f app/google-services.json
 
       - name: Run unit tests
+        env:
+          ORG_GRADLE_PROJECT_RELEASE_BASE_URL: ${{ secrets.RELEASE_BASE_URL }}
+          ORG_GRADLE_PROJECT_RELEASE_WS_BASE_URL: ${{ secrets.RELEASE_WS_BASE_URL }}
         run: ./gradlew --no-daemon test
 
   build_apk:
@@ -80,6 +86,8 @@ jobs:
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ORG_GRADLE_PROJECT_RELEASE_BASE_URL: ${{ secrets.RELEASE_BASE_URL }}
+      ORG_GRADLE_PROJECT_RELEASE_WS_BASE_URL: ${{ secrets.RELEASE_WS_BASE_URL }}
 
     steps:
       - name: Checkout

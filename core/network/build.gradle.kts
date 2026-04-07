@@ -7,6 +7,12 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val debugBaseUrl =
+    providers.gradleProperty("DEBUG_BASE_URL").orElse("http://example_ip:port").get()
+
+val releaseBaseUrl =
+    providers.gradleProperty("RELEASE_BASE_URL").orElse("http://example_ip:port").get()
+
 android {
     namespace = "com.cryptocompare.network"
     compileSdk {
@@ -15,7 +21,6 @@ android {
 
     defaultConfig {
         minSdk = 26
-        buildConfigField("String", "BASE_URL", "\"http://89.251.146.26:8081/v1/\"")
     }
 
     buildTypes {
@@ -24,6 +29,19 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
+            )
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"$releaseBaseUrl\"",
+            )
+        }
+
+        debug {
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"$debugBaseUrl\"",
             )
         }
     }

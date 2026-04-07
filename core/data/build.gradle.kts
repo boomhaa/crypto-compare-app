@@ -8,6 +8,12 @@ plugins {
     alias(libs.plugins.androidx.room)
 }
 
+val debugWsBaseUrl =
+    providers.gradleProperty("DEBUG_WS_BASE_URL").orElse("ws://example_ip:port").get()
+
+val releaseWsBaseUrl =
+    providers.gradleProperty("RELEASE_WS_BASE_URL").orElse("ws://example_ip:port").get()
+
 android {
     namespace = "com.cryptocompare.data"
     compileSdk {
@@ -16,7 +22,6 @@ android {
 
     defaultConfig {
         minSdk = 26
-        buildConfigField("String", "WS_BASE_URL", "\"ws://89.251.146.26:8081\"")
     }
 
     buildTypes {
@@ -25,6 +30,19 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
+            )
+            buildConfigField(
+                "String",
+                "WS_BASE_URL",
+                "\"$releaseWsBaseUrl\"",
+            )
+        }
+
+        debug {
+            buildConfigField(
+                "String",
+                "WS_BASE_URL",
+                "\"$debugWsBaseUrl\"",
             )
         }
     }
