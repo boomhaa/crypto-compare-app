@@ -115,7 +115,13 @@ class CryptoCompareRepositoryImpl
 
             refreshSymbolsJob =
                 refreshSymbolsScope.launch {
-                    refreshSymbols(streamToDb)
+                    try {
+                        refreshSymbols(streamToDb)
+                    }catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception){
+
+                    }
                 }
         }
 
