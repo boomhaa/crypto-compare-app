@@ -9,7 +9,7 @@ plugins {
 
 val debugBaseUrl = project.requireDebugProperty("DEBUG_BASE_URL", "http://example_ip:port")
 
-val releaseBaseUrl = project.requireDebugProperty("RELEASE_BASE_URL", "http://example_ip:port")
+val releaseBaseUrl = project.requireReleaseProperty("RELEASE_BASE_URL", "http://example_ip:port")
 
 fun Project.requireReleaseProperty(
     name: String,
