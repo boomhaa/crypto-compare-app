@@ -8,11 +8,52 @@ plugins {
     alias(libs.plugins.androidx.room)
 }
 
-val debugWsBaseUrl =
-    providers.gradleProperty("DEBUG_WS_BASE_URL").orElse("ws://example_ip:port").get()
+val debugWsBaseUrl = project.requireDebugProperty("DEBUG_WS_BASE_URL", "ws://example_ip:port")
 
-val releaseWsBaseUrl =
-    providers.gradleProperty("RELEASE_WS_BASE_URL").orElse("ws://example_ip:port").get()
+val releaseWsBaseUrl = project.requireDebugProperty("RELEASE_WS_BASE_URL", "ws://example_ip:port")
+
+
+fun Project.requireReleaseProperty(
+    name: String,
+    fallback: String,
+): String {
+    val releaseRequested =
+        gradle.startParameter.taskNames.any { taskName ->
+            taskName.contains("release", ignoreCase = true)
+        }
+
+    val value = providers.gradleProperty(name).orNull
+
+    if (releaseRequested && value.isNullOrBlank()) {
+        throw GradleException(
+            "Missing required Gradle property '$name' for release build. " +
+                "Provide it via gradle.properties or CI environment.",
+        )
+    }
+
+    return value ?: fallback
+}
+
+fun Project.requireDebugProperty(
+    name: String,
+    fallback: String,
+): String {
+    val debugRequested =
+        gradle.startParameter.taskNames.any { taskName ->
+            taskName.contains("debug", ignoreCase = true)
+        }
+
+    val value = providers.gradleProperty(name).orNull
+
+    if (debugRequested && value.isNullOrBlank()) {
+        throw GradleException(
+            "Missing required Gradle property '$name' for debug build. " +
+                "Provide it via gradle.properties or CI environment.",
+        )
+    }
+
+    return value ?: fallback
+}
 
 android {
     namespace = "com.cryptocompare.data"

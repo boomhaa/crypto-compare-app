@@ -7,12 +7,51 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-val debugBaseUrl =
-    providers.gradleProperty("DEBUG_BASE_URL").orElse("http://example_ip:port").get()
+val debugBaseUrl = project.requireDebugProperty("DEBUG_BASE_URL", "http://example_ip:port")
 
-val releaseBaseUrl =
-    providers.gradleProperty("RELEASE_BASE_URL").orElse("http://example_ip:port").get()
+val releaseBaseUrl = project.requireDebugProperty("RELEASE_BASE_URL", "http://example_ip:port")
 
+fun Project.requireReleaseProperty(
+    name: String,
+    fallback: String,
+): String {
+    val releaseRequested =
+        gradle.startParameter.taskNames.any { taskName ->
+            taskName.contains("release", ignoreCase = true)
+        }
+
+    val value = providers.gradleProperty(name).orNull
+
+    if (releaseRequested && value.isNullOrBlank()) {
+        throw GradleException(
+            "Missing required Gradle property '$name' for release build. " +
+                "Provide it via gradle.properties or CI environment.",
+        )
+    }
+
+    return value ?: fallback
+}
+
+fun Project.requireDebugProperty(
+    name: String,
+    fallback: String,
+): String {
+    val debugRequested =
+        gradle.startParameter.taskNames.any { taskName ->
+            taskName.contains("debug", ignoreCase = true)
+        }
+
+    val value = providers.gradleProperty(name).orNull
+
+    if (debugRequested && value.isNullOrBlank()) {
+        throw GradleException(
+            "Missing required Gradle property '$name' for debug build. " +
+                "Provide it via gradle.properties or CI environment.",
+        )
+    }
+
+    return value ?: fallback
+}
 android {
     namespace = "com.cryptocompare.network"
     compileSdk {
