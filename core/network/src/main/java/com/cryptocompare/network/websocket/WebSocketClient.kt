@@ -1,5 +1,6 @@
 package com.cryptocompare.network.websocket
 
+import android.util.Log
 import com.cryptocompare.helpers.util.Constants
 import com.cryptocompare.network.dto.webSocketDTO.SocketDtoMessage
 import com.cryptocompare.network.dto.webSocketDTO.SocketInboundRawMessage
@@ -223,7 +224,7 @@ class WebSocketClient
             val parsedMessage =
                 runCatching { gson.fromJson(rawMessage, SocketInboundRawMessage::class.java) }.getOrNull() ?: return
             val type = MessageType.fromType(parsedMessage.type)
-
+            Log.d("WebSocket", rawMessage)
             val message: SocketDtoMessage =
                 when (type) {
                     MessageType.WELCOME -> {
@@ -266,6 +267,7 @@ class WebSocketClient
                         SocketDtoMessage.Error(parsedMessage.id, data = data)
                     }
                 }
+
             scope.launch { _messages.emit(message) }
         }
 
