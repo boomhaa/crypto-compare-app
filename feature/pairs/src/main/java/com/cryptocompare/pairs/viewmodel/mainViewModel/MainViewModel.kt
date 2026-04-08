@@ -74,18 +74,24 @@ class MainViewModel
 
         private fun observeSocket() {
             viewModelScope.launch {
-                observeTickerEventUseCase().collect { event ->
-                    if (event is TickerStreamEvent.TickerPriceChange) {
-                        _uiState.update { state ->
-                            val updatedPairs =
-                                applyTickerPriceChangesUseCase(
-                                    event = event,
-                                    symbolsById = symbolsById,
-                                    currentPairs = state.pairs.toMutableList(),
-                                )
-                            state.copy(pairs = updatedPairs)
+                try {
+                    observeTickerEventUseCase().collect { event ->
+                        if (event is TickerStreamEvent.TickerPriceChange) {
+                            _uiState.update { state ->
+                                val updatedPairs =
+                                    applyTickerPriceChangesUseCase(
+                                        event = event,
+                                        symbolsById = symbolsById,
+                                        currentPairs = state.pairs.toMutableList(),
+                                    )
+                                state.copy(pairs = updatedPairs)
+                            }
                         }
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message ?: "Socket error") }
                 }
             }
         }

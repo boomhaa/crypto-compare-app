@@ -13,7 +13,7 @@ class ApplyTickerPriceChangesUseCase
             event: TickerStreamEvent.TickerPriceChange,
             symbolsById: MutableMap<Long, Symbol>,
             currentPairs: MutableList<PairUiItem>,
-        ): MutableList<PairUiItem> {
+        ): List<PairUiItem> {
             val symbolId = event.data.symbolId.toLong()
             val currentSymbol = symbolsById[symbolId] ?: return currentPairs
 
@@ -31,11 +31,9 @@ class ApplyTickerPriceChangesUseCase
             val updatedItem =
                 symbolsById.values.toPairItemByTicker(normalizedTicker)
                     ?: return currentPairs
-            val index = currentPairs.indexOfFirst { it.ticker == normalizedTicker }
 
-            if (index == -1) return currentPairs
-            currentPairs[index] = updatedItem
+            val updatedPairs = currentPairs.map { if (it.ticker == normalizedTicker) updatedItem else it }
 
-            return currentPairs
+            return updatedPairs
         }
     }

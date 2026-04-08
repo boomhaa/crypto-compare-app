@@ -16,8 +16,11 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -292,5 +295,40 @@ class CryptoCompareRepositoryImplTest {
 
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { symbolDao.syncSymbols(withArg { assertEquals(2, it.size) }) }
+        }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `getSymbols does not crash when background refresh throws`() =
+        runTest(dispatcher) {
+            val api = mockk<CryptoCompareApi>()
+            val symbolDao = mockk<SymbolDao>()
+            val providerDao = mockk<ProviderDao>()
+            val repo = createRepo(api, symbolDao, providerDao)
+
+            val cached =
+                listOf(SymbolEntity(11L, "btcusdt", "BTC/USDT", 1, 101.0, 1, 99.0, "", 100L))
+
+            coEvery { symbolDao.getAll() } returns cached
+            coEvery { symbolDao.getLastUpdate() } returns 0L
+            coEvery { symbolDao.observeAll() } returns flowOf(cached)
+            coEvery { providerDao.getAll() } returns emptyList()
+            coEvery { providerDao.getLastUpdate() } returns 0L
+            coEvery { api.getProviders() } throws java.net.SocketTimeoutException("timeout")
+
+            val emitted = mutableListOf<List<com.cryptocompare.model.Symbol>>()
+            val collectJob =
+                launch {
+                    repo.getSymbols().collect { page ->
+                        emitted += page
+                    }
+                }
+
+            advanceUntilIdle()
+            collectJob.cancel()
+
+            assertEquals(1, emitted.size)
+            assertEquals("btcusdt", emitted.first().first().ticker)
+            coVerify(exactly = 1) { api.getProviders() }
         }
 }

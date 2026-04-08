@@ -1,5 +1,3 @@
-@file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
-
 package com.cryptocompare.pairs.ui.screens.mainScreen
 
 import androidx.compose.foundation.background
