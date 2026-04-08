@@ -117,10 +117,9 @@ class CryptoCompareRepositoryImpl
                 refreshSymbolsScope.launch {
                     try {
                         refreshSymbols(streamToDb)
-                    }catch (e: CancellationException) {
+                    } catch (e: CancellationException) {
                         throw e
-                    } catch (_: Exception){
-
+                    } catch (_: Exception) {
                     }
                 }
         }

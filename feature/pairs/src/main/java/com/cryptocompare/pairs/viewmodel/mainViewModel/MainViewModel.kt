@@ -91,7 +91,7 @@ class MainViewModel
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    _uiState.update { it.copy(error = e.message?: "Socket error") }
+                    _uiState.update { it.copy(error = e.message ?: "Socket error") }
                 }
             }
         }

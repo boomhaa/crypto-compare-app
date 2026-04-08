@@ -296,6 +296,40 @@ class MainViewModelTest {
         }
 
     @Test
+    fun `socket flow failure sets error and does not crash`() =
+        runTest {
+            val loadPairsUseCase = loadPairsUseCaseMock { emptyFlow() }
+            val observeTickerEventUseCase =
+                observeTickerEventUseCaseMock(
+                    flow {
+                        throw IllegalStateException("socket disconnected")
+                    },
+                )
+            val syncVisibleTickersUseCase =
+                syncVisibleTickersUseCaseMock { visible, _ ->
+                    visible.map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+                }
+            val streamDisconnectUseCase = streamDisconnectUseCaseMock()
+            val applyTickerPriceChangesUseCase =
+                applyTickerPriceChangesUseCaseMock { _, _, currentPairs ->
+                    currentPairs
+                }
+
+            val vm =
+                MainViewModel(
+                    loadPairsUseCase = loadPairsUseCase,
+                    syncVisibleTickersUseCase = syncVisibleTickersUseCase,
+                    streamDisconnectUseCase = streamDisconnectUseCase,
+                    observeTickerEventUseCase = observeTickerEventUseCase,
+                    applyTickerPriceChangesUseCase = applyTickerPriceChangesUseCase,
+                )
+
+            yield()
+
+            assertEquals("socket disconnected", vm.uiState.value.error)
+        }
+
+    @Test
     fun `onVisibleTickersChange updates subscribed tickers from use case result`() =
         runTest {
             val loadPairsUseCase = loadPairsUseCaseMock { emptyFlow() }
