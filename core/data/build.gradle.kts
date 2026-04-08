@@ -12,7 +12,6 @@ val debugWsBaseUrl = project.requireDebugProperty("DEBUG_WS_BASE_URL", "ws://exa
 
 val releaseWsBaseUrl = project.requireDebugProperty("RELEASE_WS_BASE_URL", "ws://example_ip:port")
 
-
 fun Project.requireReleaseProperty(
     name: String,
     fallback: String,
