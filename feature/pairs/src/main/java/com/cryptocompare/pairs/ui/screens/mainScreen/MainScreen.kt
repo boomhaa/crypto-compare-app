@@ -5,6 +5,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,10 +17,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
@@ -43,9 +46,12 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     val focusManager = LocalFocusManager.current
 
     val filteredPairs =
-        uiState.value.pairs.filter { pair ->
-            pair.ticker.contains(uiState.value.searchQuery.trim(), ignoreCase = true)
-        }
+        uiState.value.pairs
+            .filter { pair ->
+                pair.ticker.contains(uiState.value.searchQuery.trim(), ignoreCase = true)
+            }.filter { pair ->
+                !uiState.value.onlyFavourite || pair.ticker in uiState.value.favouriteTickers
+            }
 
     val lazyList = rememberLazyListState()
 
@@ -64,6 +70,10 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
         if (uiState.value.loading || uiState.value.error != null) {
             viewModel.onVisibleTickersChange(emptyList())
         }
+    }
+
+    LaunchedEffect(uiState.value.onlyFavourite) {
+        lazyList.scrollToItem(0)
     }
 
     Scaffold(
@@ -99,6 +109,21 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                 singleLine = true,
                 label = { Text("Search:") },
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "Only favorites",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Switch(
+                    checked = uiState.value.onlyFavourite,
+                    onCheckedChange = viewModel::onOnlyFavouriteChange,
+                )
+            }
 
             when {
                 uiState.value.loading -> {
@@ -147,6 +172,8 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                                 PairRow(
                                     pair = pair,
                                     rowHeight = calculatedRowHeight,
+                                    isFavourite = pair.ticker in uiState.value.favouriteTickers,
+                                    onFavouriteClick = { viewModel.onFavouriteClick(pair.ticker) },
                                 )
                             }
                         }

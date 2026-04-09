@@ -6,6 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,6 +32,8 @@ fun PairRow(
     pair: PairUiItem,
     modifier: Modifier = Modifier,
     rowHeight: Dp? = null,
+    isFavourite: Boolean = false,
+    onFavouriteClick: () -> Unit = {},
 ) {
     val rowModifier =
         if (rowHeight != null) {
@@ -85,6 +92,13 @@ fun PairRow(
                     color = MaterialTheme.colorScheme.textSecondary,
                     textAlign = TextAlign.End,
                     maxLines = 1,
+                )
+            }
+            IconButton(onClick = onFavouriteClick) {
+                Icon(
+                    imageVector = if (isFavourite) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = if (isFavourite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavourite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

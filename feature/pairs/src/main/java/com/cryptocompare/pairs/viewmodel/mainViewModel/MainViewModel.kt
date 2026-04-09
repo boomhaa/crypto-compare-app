@@ -1,12 +1,16 @@
 package com.cryptocompare.pairs.viewmodel.mainViewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cryptocompare.domain.usecase.pairs.ApplyTickerPriceChangesUseCase
 import com.cryptocompare.domain.usecase.pairs.LoadPairsUseCase
+import com.cryptocompare.domain.usecase.pairs.ObserveFavouriteTickersUseCase
 import com.cryptocompare.domain.usecase.pairs.ObserveTickerEventUseCase
 import com.cryptocompare.domain.usecase.pairs.StreamDisconnectUseCase
+import com.cryptocompare.domain.usecase.pairs.SyncFavouriteTickersUseCase
 import com.cryptocompare.domain.usecase.pairs.SyncVisibleTickersUseCase
+import com.cryptocompare.domain.usecase.pairs.ToggleFavouriteTickerUseCase
 import com.cryptocompare.model.Symbol
 import com.cryptocompare.model.TickerStreamEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +30,9 @@ class MainViewModel
         private val streamDisconnectUseCase: StreamDisconnectUseCase,
         private val observeTickerEventUseCase: ObserveTickerEventUseCase,
         private val applyTickerPriceChangesUseCase: ApplyTickerPriceChangesUseCase,
+        private val observeFavouriteTickersUseCase: ObserveFavouriteTickersUseCase,
+        private val syncFavouriteTickersUseCase: SyncFavouriteTickersUseCase,
+        private val toggleFavouriteTickerUseCase: ToggleFavouriteTickerUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(MainUiState())
         val uiState = _uiState.asStateFlow()
@@ -36,6 +43,8 @@ class MainViewModel
         init {
             observeSocket()
             loadPairs()
+            syncFavouriteTickers()
+            observeFavouriteTickers()
         }
 
         fun loadPairs() {
@@ -63,11 +72,24 @@ class MainViewModel
             _uiState.update { it.copy(searchQuery = query) }
         }
 
+        fun onFavouriteClick(ticker: String) {
+            viewModelScope.launch {
+                toggleFavouriteTickerUseCase(ticker).onFailure { exception ->
+                    _uiState.update { it.copy(error = exception.message ?: "Favourite toggle error") }
+                }
+            }
+        }
+
+        fun onOnlyFavouriteChange(enabled: Boolean) {
+            _uiState.update { it.copy(onlyFavourite = enabled) }
+        }
+
         fun onVisibleTickersChange(visibleTickers: List<String>) {
             val updatedSubscribedTickers = syncVisibleTickersUseCase(visibleTickers, subscribedTickers)
 
             subscribedTickers.clear()
             subscribedTickers.addAll(updatedSubscribedTickers)
+            Log.d("MainViewModel", subscribedTickers.toString())
 
             _uiState.update { it.copy(subscribedTickers = updatedSubscribedTickers) }
         }
@@ -92,6 +114,22 @@ class MainViewModel
                     throw e
                 } catch (e: Exception) {
                     _uiState.update { it.copy(error = e.message ?: "Socket error") }
+                }
+            }
+        }
+
+        fun syncFavouriteTickers() {
+            viewModelScope.launch {
+                syncFavouriteTickersUseCase().onFailure { exception ->
+                    _uiState.update { it.copy(error = exception.message ?: "Couldn't sync favourite tickers") }
+                }
+            }
+        }
+
+        private fun observeFavouriteTickers() {
+            viewModelScope.launch {
+                observeFavouriteTickersUseCase().collect { favourites ->
+                    _uiState.update { it.copy(favouriteTickers = favourites) }
                 }
             }
         }
