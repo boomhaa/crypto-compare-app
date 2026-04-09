@@ -124,6 +124,7 @@ dependencies {
     // firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
 
     // local storage
     implementation(libs.androidx.room.runtime)

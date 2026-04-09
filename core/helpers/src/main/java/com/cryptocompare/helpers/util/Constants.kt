@@ -26,4 +26,11 @@ object Constants {
     object WorkerConstants {
         const val UNIQUE_WORK_NAME = "refresh_catalog_once_per_day"
     }
+
+    object FirestoreConstants {
+        const val USERS_COLLECTION = "users"
+        const val FAVORITES_COLLECTION = "favorites"
+        const val TICKER_FIELD = "ticker"
+        const val UPDATED_AT_FIELD = "updatedAt"
+    }
 }
