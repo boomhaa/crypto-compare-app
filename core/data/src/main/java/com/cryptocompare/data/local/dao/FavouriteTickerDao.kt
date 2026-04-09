@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.cryptocompare.data.local.entity.FavouriteTickerEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -35,4 +36,15 @@ interface FavouriteTickerDao {
 
     @Query("DELETE FROM favourite_tickers WHERE userId = :userId")
     suspend fun deleteByUser(userId: String)
+
+    @Transaction
+    suspend fun replaceAll(
+        userId: String,
+        entities: List<FavouriteTickerEntity>,
+    ) {
+        deleteByUser(userId)
+        if (entities.isNotEmpty()) {
+            upsertAll(entities)
+        }
+    }
 }

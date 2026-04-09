@@ -1,6 +1,5 @@
 package com.cryptocompare.data.repository
 
-import android.util.Log
 import com.cryptocompare.data.local.dao.FavouriteTickerDao
 import com.cryptocompare.data.local.entity.FavouriteTickerEntity
 import com.cryptocompare.domain.repository.FavouriteTickerRepository
@@ -59,6 +58,7 @@ class FavouriteTickerRepositoryImpl
                     val userId = auth.currentUser?.uid ?: error("User not authorized")
                     val exists = favouriteTickerDao.exists(userId, normalizedTicker)
                     if (exists) {
+                        favouriteTickerDao.delete(userId, normalizedTicker)
                         firestore
                             .collection(FirestoreConstants.USERS_COLLECTION)
                             .document(userId)
@@ -66,7 +66,6 @@ class FavouriteTickerRepositoryImpl
                             .document(normalizedTicker)
                             .delete()
                             .await()
-                        favouriteTickerDao.delete(userId, normalizedTicker)
                         false
                     } else {
                         val updatedAt = System.currentTimeMillis()
@@ -77,21 +76,18 @@ class FavouriteTickerRepositoryImpl
                                 updatedAt = updatedAt,
                             ),
                         )
-                        try {
-                            firestore
-                                .collection(FirestoreConstants.USERS_COLLECTION)
-                                .document(userId)
-                                .collection(FirestoreConstants.FAVORITES_COLLECTION)
-                                .document(normalizedTicker)
-                                .set(
-                                    mapOf(
-                                        FirestoreConstants.TICKER_FIELD to ticker,
-                                        FirestoreConstants.UPDATED_AT_FIELD to updatedAt,
-                                    ),
-                                ).await()
-                        } catch (e: Exception) {
-                            Log.w("FavouriteTickerRepositoryImpl", e.message ?: "Error while saving to firebase")
-                        }
+                        firestore
+                            .collection(FirestoreConstants.USERS_COLLECTION)
+                            .document(userId)
+                            .collection(FirestoreConstants.FAVORITES_COLLECTION)
+                            .document(normalizedTicker)
+                            .set(
+                                mapOf(
+                                    FirestoreConstants.TICKER_FIELD to ticker,
+                                    FirestoreConstants.UPDATED_AT_FIELD to updatedAt,
+                                ),
+                            ).await()
+
                         true
                     }
                 }.onFailure { exception -> if (exception is CancellationException) throw exception }
@@ -127,37 +123,48 @@ class FavouriteTickerRepositoryImpl
                             }.toMap()
 
                     val localTickers = favouriteTickerDao.getUserTickers(userId).associateBy { it.ticker }
-                    val mergedTickers = localTickers.keys + remoteTickers.keys
+                    val mergedFavourites = mergeTickers(localTickers, remoteTickers)
 
-                    val mergedFavourites =
-                        mergedTickers.mapNotNull { ticker ->
-                            val localTicker = localTickers[ticker]
-                            val remoteTicker = remoteTickers[ticker]
-
-                            when {
-                                localTicker == null && remoteTicker == null -> null
-                                localTicker == null -> remoteTicker
-                                remoteTicker == null -> localTicker
-                                localTicker.updatedAt >= remoteTicker.updatedAt -> localTicker
-                                else -> remoteTicker
-                            }
-                        }
-
-                    favouriteTickerDao.deleteByUser(userId)
-
-                    mergedFavourites.forEach { favourite ->
-                        firestore
-                            .collection(FirestoreConstants.USERS_COLLECTION)
-                            .document(userId)
-                            .collection(FirestoreConstants.FAVORITES_COLLECTION)
-                            .document(favourite.ticker)
-                            .set(
+                    mergedFavourites.chunked(500).forEach { chunk ->
+                        val batch = firestore.batch()
+                        chunk.forEach { favourite ->
+                            val doc =
+                                firestore
+                                    .collection(FirestoreConstants.USERS_COLLECTION)
+                                    .document(userId)
+                                    .collection(FirestoreConstants.FAVORITES_COLLECTION)
+                                    .document(favourite.ticker)
+                            batch.set(
+                                doc,
                                 mapOf(
                                     FirestoreConstants.TICKER_FIELD to favourite.ticker,
                                     FirestoreConstants.UPDATED_AT_FIELD to favourite.updatedAt,
                                 ),
-                            ).await()
+                            )
+                        }
+                        batch.commit().await()
                     }
+
+                    favouriteTickerDao.replaceAll(userId, mergedFavourites)
                 }.onFailure { exception -> if (exception is CancellationException) throw exception }
             }
+
+        private fun mergeTickers(
+            localTickers: Map<String, FavouriteTickerEntity>,
+            remoteTickers: Map<String, FavouriteTickerEntity>,
+        ): List<FavouriteTickerEntity> {
+            val mergedTickers = localTickers.keys + remoteTickers.keys
+            return mergedTickers.mapNotNull { ticker ->
+                val localTicker = localTickers[ticker]
+                val remoteTicker = remoteTickers[ticker]
+
+                when {
+                    localTicker == null && remoteTicker == null -> null
+                    localTicker == null -> remoteTicker
+                    remoteTicker == null -> localTicker
+                    localTicker.updatedAt >= remoteTicker.updatedAt -> localTicker
+                    else -> remoteTicker
+                }
+            }
+        }
     }
