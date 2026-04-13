@@ -10,6 +10,7 @@ import com.cryptocompare.domain.usecase.pairs.StreamDisconnectUseCase
 import com.cryptocompare.domain.usecase.pairs.SyncFavouriteTickersUseCase
 import com.cryptocompare.domain.usecase.pairs.SyncVisibleTickersUseCase
 import com.cryptocompare.domain.usecase.pairs.ToggleFavouriteTickerUseCase
+import com.cryptocompare.helpers.toUserMessage
 import com.cryptocompare.model.Symbol
 import com.cryptocompare.model.TickerStreamEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -62,7 +63,7 @@ class MainViewModel
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    _uiState.update { it.copy(loading = false, error = e.message ?: "Error") }
+                    _uiState.update { it.copy(loading = false, error = e.toUserMessage()) }
                 }
             }
         }
@@ -111,7 +112,7 @@ class MainViewModel
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    _uiState.update { it.copy(error = e.message ?: "Socket error") }
+                    _uiState.update { it.copy(error = e.toUserMessage()) }
                 }
             }
         }
