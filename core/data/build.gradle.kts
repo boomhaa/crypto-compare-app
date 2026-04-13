@@ -10,7 +10,7 @@ plugins {
 
 val debugWsBaseUrl = project.requireDebugProperty("DEBUG_WS_BASE_URL", "ws://example_ip:port")
 
-val releaseWsBaseUrl = project.requireDebugProperty("RELEASE_WS_BASE_URL", "ws://example_ip:port")
+val releaseWsBaseUrl = project.requireReleaseProperty("RELEASE_WS_BASE_URL", "ws://example_ip:port")
 
 fun Project.requireReleaseProperty(
     name: String,

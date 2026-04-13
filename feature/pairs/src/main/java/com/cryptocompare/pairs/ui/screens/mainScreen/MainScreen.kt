@@ -18,9 +18,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +58,8 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
     val lazyList = rememberLazyListState()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     LaunchedEffect(lazyList, viewModel, filteredPairs) {
         snapshotFlow {
             val firstVisibleIndex = lazyList.firstVisibleItemIndex
@@ -74,6 +79,10 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
     LaunchedEffect(uiState.value.onlyFavourite) {
         lazyList.scrollToItem(0)
+    LaunchedEffect(uiState.value.error) {
+        uiState.value.error?.let { message ->
+            snackbarHostState.showSnackbar(message)
+        }
     }
 
     Scaffold(
@@ -87,6 +96,9 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                     )
                 },
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         },
     ) { paddingValues ->
         Column(
@@ -144,14 +156,6 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                             }
                         }
                     }
-                }
-
-                uiState.value.error != null -> {
-                    Text(
-                        text = "Error: ${uiState.value.error}",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
                 }
 
                 else -> {

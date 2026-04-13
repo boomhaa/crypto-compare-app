@@ -223,7 +223,6 @@ class WebSocketClient
             val parsedMessage =
                 runCatching { gson.fromJson(rawMessage, SocketInboundRawMessage::class.java) }.getOrNull() ?: return
             val type = MessageType.fromType(parsedMessage.type)
-
             val message: SocketDtoMessage =
                 when (type) {
                     MessageType.WELCOME -> {
@@ -266,6 +265,7 @@ class WebSocketClient
                         SocketDtoMessage.Error(parsedMessage.id, data = data)
                     }
                 }
+
             scope.launch { _messages.emit(message) }
         }
 
