@@ -17,7 +17,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.cryptocompare.app"
+        applicationId = "com.boomhaa.cryptocompare"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

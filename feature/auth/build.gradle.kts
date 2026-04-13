@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.play.services.auth)
+    implementation(libs.androidx.compiler)
     ksp(libs.hilt.compiler)
 
     testImplementation(project(":core:testing"))
