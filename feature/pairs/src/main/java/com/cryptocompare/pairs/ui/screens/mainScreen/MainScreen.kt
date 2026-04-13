@@ -79,6 +79,8 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
     LaunchedEffect(uiState.value.onlyFavourite) {
         lazyList.scrollToItem(0)
+    }
+
     LaunchedEffect(uiState.value.error) {
         uiState.value.error?.let { message ->
             snackbarHostState.showSnackbar(message)
