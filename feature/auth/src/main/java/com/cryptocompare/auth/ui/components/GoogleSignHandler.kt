@@ -1,6 +1,9 @@
 package com.cryptocompare.auth.ui.components
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -43,18 +46,32 @@ fun rememberGoogleSignInHandler(
                 } else {
                     onToken(idToken)
                 }
-            } catch (_: ApiException) {
+            } catch (e: ApiException) {
+                Log.e("GoogleSignIn", "ApiException statusCode=${e.statusCode}", e)
                 onError(errorSignInFailed)
             }
         }
 
     return signIn@{
-        val activity = context as? Activity
-        if (activity == null) {
-            onError(errorSignInFailed)
-            return@signIn
-        }
+        val activity =
+            context.findActivity() ?: run {
+                Log.e("GoogleSignIn", "No activity")
+                return@signIn
+            }
+
         val client = GoogleSignIn.getClient(activity, googleSignInOptions)
-        launcher.launch(client.signInIntent)
+
+        client.signOut().addOnCompleteListener {
+            launcher.launch(client.signInIntent)
+        }
     }
+}
+
+fun Context.findActivity(): Activity? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
 }

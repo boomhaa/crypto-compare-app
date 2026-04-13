@@ -1,6 +1,5 @@
 package com.cryptocompare.pairs.viewmodel.mainViewModel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cryptocompare.domain.usecase.pairs.ApplyTickerPriceChangesUseCase
@@ -89,7 +88,6 @@ class MainViewModel
 
             subscribedTickers.clear()
             subscribedTickers.addAll(updatedSubscribedTickers)
-            Log.d("MainViewModel", subscribedTickers.toString())
 
             _uiState.update { it.copy(subscribedTickers = updatedSubscribedTickers) }
         }
