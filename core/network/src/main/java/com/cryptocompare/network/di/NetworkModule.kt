@@ -62,7 +62,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideCryptoHistoryApo(
+    fun provideCryptoHistoryApi(
         gson: Gson,
         @Named("tickerHistoryUrl") tickerHistoryUrl: String,
     ): CryptoHistoryApi =

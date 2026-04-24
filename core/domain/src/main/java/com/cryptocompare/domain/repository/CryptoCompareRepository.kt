@@ -9,5 +9,7 @@ interface CryptoCompareRepository {
 
     fun getSymbols(): Flow<List<Symbol>>
 
+    suspend fun getSymbolsByTicker(ticker: String): Result<List<Symbol>>
+
     suspend fun refreshCatalog(): Result<Unit>
 }

@@ -98,6 +98,10 @@ class CryptoCompareRepositoryImpl
                 }
             }.flowOn(ioDispatcher)
 
+        override suspend fun getSymbolsByTicker(ticker: String): Result<List<Symbol>> {
+            TODO("Not yet implemented")
+        }
+
         override suspend fun refreshCatalog(): Result<Unit> =
             withContext(ioDispatcher) {
                 runCatching {
