@@ -2,6 +2,7 @@ package com.cryptocompare.network.di
 
 import com.cryptocompare.network.BuildConfig
 import com.cryptocompare.network.api.CryptoCompareApi
+import com.cryptocompare.network.api.CryptoHistoryApi
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
@@ -22,7 +23,12 @@ object NetworkModule {
     @Provides
     @Singleton
     @Named("baseUrl")
-    fun provideWebSocketUrl(): String = BuildConfig.BASE_URL
+    fun provideBaseUrl(): String = BuildConfig.BASE_URL
+
+    @Provides
+    @Singleton
+    @Named("tickerHistoryUrl")
+    fun provideTickerHistoryUrl(): String = BuildConfig.TICKER_HISTORY_URL
 
     @Provides
     @Singleton
@@ -53,4 +59,17 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(CryptoCompareApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCryptoHistoryApo(
+        gson: Gson,
+        @Named("tickerHistoryUrl") tickerHistoryUrl: String,
+    ): CryptoHistoryApi =
+        Retrofit
+            .Builder()
+            .baseUrl(tickerHistoryUrl)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+            .create(CryptoHistoryApi::class.java)
 }

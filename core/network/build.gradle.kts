@@ -8,8 +8,10 @@ plugins {
 }
 
 val debugBaseUrl = project.requireDebugProperty("DEBUG_BASE_URL", "http://example_ip:port")
-
 val releaseBaseUrl = project.requireReleaseProperty("RELEASE_BASE_URL", "http://example_ip:port")
+
+val debugTickerHistoryUrl = project.requireDebugProperty("DEBUG_TICKER_HISTORY_URL", "http://example_ip:port")
+val releaseTickerHistoryUrl = project.requireReleaseProperty("RELEASE_TICKER_HISTORY_URL", "http://example_ip:port")
 
 fun Project.requireReleaseProperty(
     name: String,
@@ -74,6 +76,12 @@ android {
                 "BASE_URL",
                 "\"$releaseBaseUrl\"",
             )
+
+            buildConfigField(
+                "String",
+                "TICKER_HISTORY_URL",
+                "\"$releaseTickerHistoryUrl\"",
+            )
         }
 
         debug {
@@ -81,6 +89,12 @@ android {
                 "String",
                 "BASE_URL",
                 "\"$debugBaseUrl\"",
+            )
+
+            buildConfigField(
+                "String",
+                "TICKER_HISTORY_URL",
+                "\"$debugTickerHistoryUrl\"",
             )
         }
     }

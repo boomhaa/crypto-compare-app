@@ -8,10 +8,10 @@ import com.cryptocompare.data.repository.CryptoCompareRepositoryImpl
 import com.cryptocompare.model.Provider
 import com.cryptocompare.model.ProviderStatus
 import com.cryptocompare.network.api.CryptoCompareApi
-import com.cryptocompare.network.dto.apiDTO.GetProvidersResponse
-import com.cryptocompare.network.dto.apiDTO.GetSymbolsResponse
-import com.cryptocompare.network.dto.apiDTO.ProviderDto
-import com.cryptocompare.network.dto.apiDTO.SymbolDto
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.GetProvidersResponse
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.GetSymbolsResponse
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.ProviderDto
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.SymbolDto
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

@@ -2,7 +2,7 @@ package com.cryptocompare.data.mapper
 
 import com.cryptocompare.data.local.entity.SymbolEntity
 import com.cryptocompare.model.Symbol
-import com.cryptocompare.network.dto.apiDTO.SymbolDto
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.SymbolDto
 
 fun SymbolEntity.toDomainFromEntity(): Symbol =
     Symbol(

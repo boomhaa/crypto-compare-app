@@ -4,7 +4,7 @@ import com.cryptocompare.data.local.entity.ProviderEntity
 import com.cryptocompare.data.mapper.toDomainFromEntity
 import com.cryptocompare.data.mapper.toEntityFromDto
 import com.cryptocompare.model.ProviderStatus
-import com.cryptocompare.network.dto.apiDTO.ProviderDto
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.ProviderDto
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

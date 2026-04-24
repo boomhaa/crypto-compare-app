@@ -1,4 +1,4 @@
-package com.cryptocompare.network.dto.apiDTO
+package com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO
 
 import com.cryptocompare.model.ProviderStatus
 

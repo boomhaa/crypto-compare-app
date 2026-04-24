@@ -3,7 +3,7 @@ package com.cryptocompare.data.mapper
 import com.cryptocompare.data.local.entity.ProviderEntity
 import com.cryptocompare.model.Provider
 import com.cryptocompare.model.ProviderStatus
-import com.cryptocompare.network.dto.apiDTO.ProviderDto
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.ProviderDto
 
 fun ProviderEntity.toDomainFromEntity(): Provider =
     Provider(

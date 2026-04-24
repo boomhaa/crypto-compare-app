@@ -1,9 +1,9 @@
 package com.cryptocompare.network.api
 
-import com.cryptocompare.network.dto.apiDTO.GetProviderResponse
-import com.cryptocompare.network.dto.apiDTO.GetProvidersResponse
-import com.cryptocompare.network.dto.apiDTO.GetSymbolResponse
-import com.cryptocompare.network.dto.apiDTO.GetSymbolsResponse
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.GetProviderResponse
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.GetProvidersResponse
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.GetSymbolResponse
+import com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO.GetSymbolsResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

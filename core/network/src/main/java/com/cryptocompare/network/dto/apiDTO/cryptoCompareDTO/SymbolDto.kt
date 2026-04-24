@@ -1,4 +1,4 @@
-package com.cryptocompare.network.dto.apiDTO
+package com.cryptocompare.network.dto.apiDTO.cryptoCompareDTO
 
 data class SymbolDto(
     val id: Long,
